@@ -267,7 +267,7 @@ class VariantRef : public VariantRefBase<VariantData>,
   }
 
   FORCE_INLINE bool operator!=(VariantRef rhs) const {
-    return !variantEquals(_data, rhs._data);
+    return compare(rhs) != 0;
   }
 
   // Change the type of the variant
