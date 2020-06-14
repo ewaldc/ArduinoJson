@@ -262,12 +262,12 @@ class VariantRef : public VariantRefBase<VariantData>,
     variantAccept(_data, visitor);
   }
 
-  FORCE_INLINE bool operator==(VariantRef lhs) const {
-    return variantEquals(_data, lhs._data);
+  FORCE_INLINE bool operator==(VariantRef rhs) const {
+    return compare(rhs) == 0;
   }
 
-  FORCE_INLINE bool operator!=(VariantRef lhs) const {
-    return !variantEquals(_data, lhs._data);
+  FORCE_INLINE bool operator!=(VariantRef rhs) const {
+    return !variantEquals(_data, rhs._data);
   }
 
   // Change the type of the variant
