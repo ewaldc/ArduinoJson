@@ -39,6 +39,7 @@ struct Comparer<T, typename enable_if<IsString<T>::value>::type> {
     result = adaptString(rhs).compare(NULL);
   }
 };
+
 template <typename T>
 typename enable_if<is_signed<T>::value, int>::type sign2(const T &value) {
   return value < 0 ? -1 : value > 0 ? 1 : 0;
@@ -139,6 +140,29 @@ struct ArrayComparer {
   void visitNull() {}
 };
 
+struct NegativeIntegerComparer {
+  int result;
+  UInt _rhs;
+
+  explicit NegativeIntegerComparer(UInt rhs) : _rhs(rhs) {}
+
+  void visitArray(const CollectionData &) {}
+  void visitObject(const CollectionData &) {}
+  void visitFloat(Float lhs) {
+    result = sign2(lhs + static_cast<Float>(_rhs));
+  }
+  void visitString(const char *) {}
+  void visitRawJson(const char *, size_t) {}
+  void visitNegativeInteger(UInt lhs) {
+    result = lhs < _rhs ? -1 : lhs > _rhs ? 1 : 0;
+  }
+  void visitPositiveInteger(UInt) {
+    result = 1;
+  }
+  void visitBoolean(bool) {}
+  void visitNull() {}
+};
+
 struct ObjectComparer {
   int result;
   const CollectionData *_rhs;
@@ -215,7 +239,7 @@ struct Comparer<T, typename enable_if<IsVisitable<T>::value>::type> {
   }
 
   void visitNegativeInteger(UInt lhs) {
-    Comparer<Integer> comparer(-lhs);
+    NegativeIntegerComparer comparer(lhs);
     accept(comparer);
   }
 
@@ -246,10 +270,7 @@ template <typename TData>
 template <typename T>
 int VariantRefBase<TData>::compare(const T &rhs) const {
   Comparer<T> comparer(rhs);
-  if (_data)
-    _data->accept(comparer);
-  else
-    comparer.visitNull();
+  variantAccept(_data, comparer);
   return comparer.result;
 }
 
