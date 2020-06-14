@@ -36,8 +36,7 @@ struct VariantOperators {
     return rhs.compare(lhs) == 0;
   }
   template <typename T>
-  friend typename enable_if<!IsVisitable<T>::value, bool>::type operator==(
-      const T &lhs, TVariant rhs) {
+  friend bool operator==(const T &lhs, TVariant rhs) {
     return rhs.compare(lhs) == 0;
   }
 

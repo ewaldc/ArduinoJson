@@ -262,10 +262,6 @@ class VariantRef : public VariantRefBase<VariantData>,
     variantAccept(_data, visitor);
   }
 
-  FORCE_INLINE bool operator==(VariantRef rhs) const {
-    return compare(rhs) == 0;
-  }
-
   // Change the type of the variant
   //
   // ArrayRef to<ArrayRef>()
@@ -402,10 +398,6 @@ class VariantConstRef : public VariantRefBase<const VariantData>,
       typename enable_if<IsString<TChar *>::value, VariantConstRef>::type
       operator[](TChar *key) const {
     return getMember(key);
-  }
-
-  FORCE_INLINE bool operator==(VariantConstRef rhs) const {
-    return compare(rhs) == 0;
   }
 };
 }  // namespace ARDUINOJSON_NAMESPACE
