@@ -41,12 +41,12 @@ struct Comparer<T, typename enable_if<IsString<T>::value>::type> {
 };
 
 template <typename T>
-typename enable_if<is_signed<T>::value, int>::type sign2(const T &value) {
+typename enable_if<is_signed<T>::value, int>::type sign(const T &value) {
   return value < 0 ? -1 : value > 0 ? 1 : 0;
 }
 
 template <typename T>
-typename enable_if<is_unsigned<T>::value, int>::type sign2(const T &value) {
+typename enable_if<is_unsigned<T>::value, int>::type sign(const T &value) {
   return value > 0 ? 1 : 0;
 }
 
@@ -61,12 +61,12 @@ struct Comparer<T, typename enable_if<is_integral<T>::value ||
   void visitArray(const CollectionData &) {}
   void visitObject(const CollectionData &) {}
   void visitFloat(Float lhs) {
-    result = sign2(lhs - static_cast<Float>(rhs));
+    result = sign(lhs - static_cast<Float>(rhs));
   }
   void visitString(const char *) {}
   void visitRawJson(const char *, size_t) {}
   void visitNegativeInteger(UInt lhs) {
-    result = -sign2(static_cast<T>(lhs) + rhs);
+    result = -sign(static_cast<T>(lhs) + rhs);
   }
   void visitPositiveInteger(UInt lhs) {
     result = static_cast<T>(lhs) < rhs ? -1 : static_cast<T>(lhs) > rhs ? 1 : 0;
@@ -149,7 +149,7 @@ struct NegativeIntegerComparer {
   void visitArray(const CollectionData &) {}
   void visitObject(const CollectionData &) {}
   void visitFloat(Float lhs) {
-    result = sign2(lhs + static_cast<Float>(_rhs));
+    result = sign(lhs + static_cast<Float>(_rhs));
   }
   void visitString(const char *) {}
   void visitRawJson(const char *, size_t) {}
