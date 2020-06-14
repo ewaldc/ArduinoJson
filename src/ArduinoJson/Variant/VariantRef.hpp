@@ -408,12 +408,12 @@ class VariantConstRef : public VariantRefBase<const VariantData>,
     return getMember(key);
   }
 
-  FORCE_INLINE bool operator==(VariantConstRef lhs) const {
-    return variantEquals(_data, lhs._data);
+  FORCE_INLINE bool operator==(VariantConstRef rhs) const {
+    return compare(rhs) == 0;
   }
 
-  FORCE_INLINE bool operator!=(VariantConstRef lhs) const {
-    return !variantEquals(_data, lhs._data);
+  FORCE_INLINE bool operator!=(VariantConstRef rhs) const {
+    return compare(rhs) != 0;
   }
 };
 }  // namespace ARDUINOJSON_NAMESPACE
