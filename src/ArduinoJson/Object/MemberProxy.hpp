@@ -56,14 +56,6 @@ class MemberProxy : public VariantOperators<MemberProxy<TObject, TStringRef> >,
     return *this;
   }
 
-  FORCE_INLINE bool operator==(VariantConstRef rhs) const {
-    return static_cast<VariantConstRef>(getUpstreamMember()) == rhs;
-  }
-
-  FORCE_INLINE bool operator!=(VariantConstRef rhs) const {
-    return static_cast<VariantConstRef>(getUpstreamMember()) != rhs;
-  }
-
   FORCE_INLINE void clear() const {
     getUpstreamMember().clear();
   }
