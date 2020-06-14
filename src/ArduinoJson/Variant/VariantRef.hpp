@@ -266,10 +266,6 @@ class VariantRef : public VariantRefBase<VariantData>,
     return compare(rhs) == 0;
   }
 
-  FORCE_INLINE bool operator!=(VariantRef rhs) const {
-    return compare(rhs) != 0;
-  }
-
   // Change the type of the variant
   //
   // ArrayRef to<ArrayRef>()
@@ -410,10 +406,6 @@ class VariantConstRef : public VariantRefBase<const VariantData>,
 
   FORCE_INLINE bool operator==(VariantConstRef rhs) const {
     return compare(rhs) == 0;
-  }
-
-  FORCE_INLINE bool operator!=(VariantConstRef rhs) const {
-    return compare(rhs) != 0;
   }
 };
 }  // namespace ARDUINOJSON_NAMESPACE
