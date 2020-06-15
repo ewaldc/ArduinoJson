@@ -121,10 +121,10 @@ struct Comparer<decltype(nullptr), void> : NullComparer {
 #endif
 
 struct ArrayComparer {
-  int result;
   const CollectionData *_rhs;
+  int result;
 
-  explicit ArrayComparer(const CollectionData &rhs) : _rhs(&rhs) {}
+  explicit ArrayComparer(const CollectionData &rhs) : _rhs(&rhs), result(1) {}
 
   void visitArray(const CollectionData &lhs) {
     result = lhs.equalsArray(*_rhs) ? 0 : 1;
@@ -141,10 +141,10 @@ struct ArrayComparer {
 };
 
 struct NegativeIntegerComparer {
-  int result;
   UInt _rhs;
+  int result;
 
-  explicit NegativeIntegerComparer(UInt rhs) : _rhs(rhs) {}
+  explicit NegativeIntegerComparer(UInt rhs) : _rhs(rhs), result(1) {}
 
   void visitArray(const CollectionData &) {}
   void visitObject(const CollectionData &) {}
@@ -164,10 +164,10 @@ struct NegativeIntegerComparer {
 };
 
 struct ObjectComparer {
-  int result;
   const CollectionData *_rhs;
+  int result;
 
-  explicit ObjectComparer(const CollectionData &rhs) : _rhs(&rhs) {}
+  explicit ObjectComparer(const CollectionData &rhs) : _rhs(&rhs), result(1) {}
 
   void visitArray(const CollectionData &) {}
   void visitObject(const CollectionData &lhs) {
@@ -183,12 +183,12 @@ struct ObjectComparer {
 };
 
 struct RawComparer {
-  int result;
   const char *_rhsData;
   size_t _rhsSize;
+  int result;
 
   explicit RawComparer(const char *rhsData, size_t rhsSize)
-      : _rhsData(rhsData), _rhsSize(rhsSize) {}
+      : _rhsData(rhsData), _rhsSize(rhsSize), result(1) {}
 
   void visitArray(const CollectionData &) {}
   void visitObject(const CollectionData &) {}
