@@ -274,4 +274,8 @@ int VariantRefBase<TData>::compare(const T &rhs) const {
   return comparer.result;
 }
 
+inline int variantCompare(const VariantData *a, const VariantData *b) {
+  return VariantConstRef(a).compare(VariantConstRef(b));
+}
+
 }  // namespace ARDUINOJSON_NAMESPACE
