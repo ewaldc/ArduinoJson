@@ -25,8 +25,6 @@ class ObjectRef;
 template <typename, typename>
 class MemberProxy;
 
-enum CompareResult;
-
 // Contains the methods shared by VariantRef and VariantConstRef
 template <typename TData>
 class VariantRefBase {
@@ -109,9 +107,6 @@ class VariantRefBase {
   FORCE_INLINE typename enable_if<is_enum<T>::value, bool>::type is() const {
     return variantIsInteger<int>(_data);
   }
-
-  template <typename T>
-  CompareResult compare(const T &) const;  // VariantCompare.cpp
 
   FORCE_INLINE bool isNull() const {
     return variantIsNull(_data);

@@ -324,16 +324,15 @@ struct Comparer<T, typename enable_if<IsVisitable<T>::value>::type> {
   }
 };
 
-template <typename TData>
-template <typename T>
-CompareResult VariantRefBase<TData>::compare(const T &rhs) const {
-  Comparer<T> comparer(rhs);
-  variantAccept(_data, comparer);
+template <typename T1, typename T2>
+CompareResult compare(const T1 &lhs, const T2 &rhs) {
+  Comparer<T2> comparer(rhs);
+  lhs.accept(comparer);
   return comparer.result;
 }
 
 inline int variantCompare(const VariantData *a, const VariantData *b) {
-  return VariantConstRef(a).compare(VariantConstRef(b));
+  return compare(VariantConstRef(a), VariantConstRef(b));
 }
 
 }  // namespace ARDUINOJSON_NAMESPACE
