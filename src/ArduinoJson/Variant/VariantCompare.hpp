@@ -193,7 +193,7 @@ struct NegativeIntegerComparer {
   }
 
   void visitPositiveInteger(UInt) {
-    result = COMPARE_RESULT_LESS;
+    result = COMPARE_RESULT_GREATER;
   }
 
   void visitArray(const CollectionData &) {}

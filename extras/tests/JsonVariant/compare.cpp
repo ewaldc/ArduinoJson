@@ -468,20 +468,345 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
   JsonVariant a = doc.addElement();
   JsonVariant b = doc.addElement();
 
-  SECTION("null vs. null") {
-    REQUIRE(a == b);
-    REQUIRE(a <= b);
-    REQUIRE(a >= b);
-    REQUIRE_FALSE(a != b);
-    REQUIRE_FALSE(a < b);
-    REQUIRE_FALSE(a > b);
+  SECTION("a = null") {
+    SECTION("b = null") {
+      REQUIRE(a == b);
+      REQUIRE(a <= b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a > b);
+    }
+
+    SECTION("b = 0") {
+      b.set(0);
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = -1") {
+      b.set(-1);
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = 'hello'") {
+      b.set("hello");
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = {}") {
+      b.to<JsonObject>();
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = []") {
+      b.to<JsonArray>();
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
   }
 
-  SECTION("null vs 0") {
-    b.set(0);
-    REQUIRE(a != b);
-    REQUIRE_FALSE(a < b);
-    REQUIRE_FALSE(a > b);
-    REQUIRE_FALSE(a == b);
+  SECTION("a = 1") {
+    a.set(1);
+
+    SECTION("b = 2") {
+      b.set(2);
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = 1.1") {
+      b.set(1.1);
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = -1") {
+      b.set(-1);
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+    }
+
+    SECTION("b = 'hello'") {
+      b.set("hello");
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+  }
+
+  SECTION("a = -1") {
+    a.set(-1);
+
+    SECTION("b = null") {
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = 0") {
+      b.set(0);
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = -0.9") {
+      b.set(-0.9);
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = -1.1") {
+      b.set(-1.1);
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+    }
+
+    SECTION("b = -1") {
+      b.set(-1);
+
+      REQUIRE(a <= b);
+      REQUIRE(a == b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a > b);
+    }
+
+    SECTION("b = 'hello'") {
+      b.set("hello");
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+  }
+
+  SECTION("a = [1]") {
+    a.add(1);
+
+    SECTION("b = null") {
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = [1]") {
+      b.add(1);
+
+      REQUIRE(a <= b);
+      REQUIRE(a == b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a > b);
+    }
+
+    SECTION("b = [2]") {
+      b.add(2);
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = 'hello'") {
+      b.set("hello");
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+  }
+
+  SECTION("a = {x:1}") {
+    a["x"] = 1;
+
+    SECTION("b = null") {
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = {x:1}") {
+      b["x"] = 1;
+
+      REQUIRE(a <= b);
+      REQUIRE(a == b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a > b);
+    }
+
+    SECTION("b = {x:2}") {
+      b["x"] = 2;
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = {y:1}") {
+      b["y"] = 2;
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = 'hello'") {
+      b.set("hello");
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+  }
+
+  SECTION("a = 'hello'") {
+    a.set("hello");
+
+    SECTION("b = null") {
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = 'hello'") {
+      b.set("hello");
+
+      REQUIRE(a <= b);
+      REQUIRE(a == b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a > b);
+    }
+
+    SECTION("b = 'world'") {
+      b.set("world");
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("b = 'abcd'") {
+      b.set("abcd");
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+    }
+
+    SECTION("b = {}") {
+      b.to<JsonObject>();
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
   }
 }
