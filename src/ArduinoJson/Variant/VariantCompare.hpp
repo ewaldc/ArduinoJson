@@ -68,12 +68,12 @@ struct Comparer<T, typename enable_if<is_integral<T>::value ||
   }
 
   void visitNegativeInteger(UInt lhs) {
-    if (static_cast<T>(lhs) + rhs < 0)
-      result = COMPARE_RESULT_GREATER;
+    if (static_cast<T>(lhs) + rhs == 0)
+      result = COMPARE_RESULT_EQUAL;
     else if (static_cast<T>(lhs) + rhs > 0)
       result = COMPARE_RESULT_LESS;
     else
-      result = COMPARE_RESULT_EQUAL;
+      result = COMPARE_RESULT_GREATER;
   }
 
   void visitPositiveInteger(UInt lhs) {
