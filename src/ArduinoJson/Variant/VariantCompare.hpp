@@ -21,56 +21,74 @@ struct Comparer;
 template <typename T>
 struct Comparer<T, typename enable_if<IsString<T>::value>::type> {
   T rhs;
-  int result;
+  CompareResult result;
 
-  explicit Comparer(T value) : rhs(value), result(1) {}
+  explicit Comparer(T value) : rhs(value), result(COMPARE_RESULT_DIFFER) {}
+
+  void visitString(const char *lhs) {
+    int i = adaptString(rhs).compare(lhs);
+    if (i < 0)
+      result = COMPARE_RESULT_GREATER;
+    else if (i > 0)
+      result = COMPARE_RESULT_LESS;
+    else
+      result = COMPARE_RESULT_EQUAL;
+  }
+
+  void visitNull() {
+    if (adaptString(rhs).isNull())
+      result = COMPARE_RESULT_EQUAL;
+  }
 
   void visitArray(const CollectionData &) {}
   void visitObject(const CollectionData &) {}
   void visitFloat(Float) {}
-  void visitString(const char *lhs) {
-    result = -adaptString(rhs).compare(lhs);
-  }
   void visitRawJson(const char *, size_t) {}
   void visitNegativeInteger(UInt) {}
   void visitPositiveInteger(UInt) {}
   void visitBoolean(bool) {}
-  void visitNull() {
-    result = adaptString(rhs).compare(NULL);
-  }
 };
-
-template <typename T>
-typename enable_if<is_signed<T>::value, int>::type sign(const T &value) {
-  return value < 0 ? -1 : value > 0 ? 1 : 0;
-}
-
-template <typename T>
-typename enable_if<is_unsigned<T>::value, int>::type sign(const T &value) {
-  return value > 0 ? 1 : 0;
-}
 
 template <typename T>
 struct Comparer<T, typename enable_if<is_integral<T>::value ||
                                       is_floating_point<T>::value>::type> {
   T rhs;
-  int result;
+  CompareResult result;
 
-  explicit Comparer(T value) : rhs(value), result(1) {}
+  explicit Comparer(T value) : rhs(value), result(COMPARE_RESULT_DIFFER) {}
+
+  void visitFloat(Float lhs) {
+    Float diff = lhs - static_cast<Float>(rhs);
+    if (diff < 0)
+      result = COMPARE_RESULT_LESS;
+    else if (diff > 0)
+      result = COMPARE_RESULT_GREATER;
+    else
+      result = COMPARE_RESULT_EQUAL;
+  }
+
+  void visitNegativeInteger(UInt lhs) {
+    if (static_cast<T>(lhs) + rhs < 0)
+      result = COMPARE_RESULT_GREATER;
+    else if (static_cast<T>(lhs) + rhs > 0)
+      result = COMPARE_RESULT_LESS;
+    else
+      result = COMPARE_RESULT_EQUAL;
+  }
+
+  void visitPositiveInteger(UInt lhs) {
+    if (static_cast<T>(lhs) < rhs)
+      result = COMPARE_RESULT_LESS;
+    else if (static_cast<T>(lhs) > rhs)
+      result = COMPARE_RESULT_GREATER;
+    else
+      result = COMPARE_RESULT_EQUAL;
+  }
 
   void visitArray(const CollectionData &) {}
   void visitObject(const CollectionData &) {}
-  void visitFloat(Float lhs) {
-    result = sign(lhs - static_cast<Float>(rhs));
-  }
   void visitString(const char *) {}
   void visitRawJson(const char *, size_t) {}
-  void visitNegativeInteger(UInt lhs) {
-    result = -sign(static_cast<T>(lhs) + rhs);
-  }
-  void visitPositiveInteger(UInt lhs) {
-    result = static_cast<T>(lhs) < rhs ? -1 : static_cast<T>(lhs) > rhs ? 1 : 0;
-  }
   void visitBoolean(bool) {}
   void visitNull() {}
 };
@@ -78,9 +96,18 @@ struct Comparer<T, typename enable_if<is_integral<T>::value ||
 template <>
 struct Comparer<bool, void> {
   bool rhs;
-  int result;
+  CompareResult result;
 
-  explicit Comparer(bool value) : rhs(value), result(1) {}
+  explicit Comparer(bool value) : rhs(value), result(COMPARE_RESULT_DIFFER) {}
+
+  void visitBoolean(bool lhs) {
+    if (lhs < rhs)
+      result = COMPARE_RESULT_LESS;
+    else if (lhs > rhs)
+      result = COMPARE_RESULT_GREATER;
+    else
+      result = COMPARE_RESULT_EQUAL;
+  }
 
   void visitArray(const CollectionData &) {}
   void visitObject(const CollectionData &) {}
@@ -89,16 +116,17 @@ struct Comparer<bool, void> {
   void visitRawJson(const char *, size_t) {}
   void visitNegativeInteger(UInt) {}
   void visitPositiveInteger(UInt) {}
-  void visitBoolean(bool lhs) {
-    result = static_cast<int>(lhs - rhs);
-  }
   void visitNull() {}
 };
 
 struct NullComparer {
-  int result;
+  CompareResult result;
 
-  explicit NullComparer() : result(1) {}
+  explicit NullComparer() : result(COMPARE_RESULT_DIFFER) {}
+
+  void visitNull() {
+    result = COMPARE_RESULT_EQUAL;
+  }
 
   void visitArray(const CollectionData &) {}
   void visitObject(const CollectionData &) {}
@@ -108,9 +136,6 @@ struct NullComparer {
   void visitNegativeInteger(UInt) {}
   void visitPositiveInteger(UInt) {}
   void visitBoolean(bool) {}
-  void visitNull() {
-    result = 0;
-  }
 };
 
 #if ARDUINOJSON_HAS_NULLPTR
@@ -122,12 +147,14 @@ struct Comparer<decltype(nullptr), void> : NullComparer {
 
 struct ArrayComparer {
   const CollectionData *_rhs;
-  int result;
+  CompareResult result;
 
-  explicit ArrayComparer(const CollectionData &rhs) : _rhs(&rhs), result(1) {}
+  explicit ArrayComparer(const CollectionData &rhs)
+      : _rhs(&rhs), result(COMPARE_RESULT_DIFFER) {}
 
   void visitArray(const CollectionData &lhs) {
-    result = lhs.equalsArray(*_rhs) ? 0 : 1;
+    if (lhs.equalsArray(*_rhs))
+      result = COMPARE_RESULT_EQUAL;
   }
 
   void visitObject(const CollectionData &) {}
@@ -142,36 +169,52 @@ struct ArrayComparer {
 
 struct NegativeIntegerComparer {
   UInt _rhs;
-  int result;
+  CompareResult result;
 
-  explicit NegativeIntegerComparer(UInt rhs) : _rhs(rhs), result(1) {}
+  explicit NegativeIntegerComparer(UInt rhs)
+      : _rhs(rhs), result(COMPARE_RESULT_DIFFER) {}
+
+  void visitFloat(Float lhs) {
+    if (lhs < static_cast<Float>(_rhs))
+      result = COMPARE_RESULT_LESS;
+    else if (lhs > static_cast<Float>(_rhs))
+      result = COMPARE_RESULT_GREATER;
+    else
+      result = COMPARE_RESULT_EQUAL;
+  }
+
+  void visitNegativeInteger(UInt lhs) {
+    if (lhs < _rhs)
+      result = COMPARE_RESULT_LESS;
+    else if (lhs > _rhs)
+      result = COMPARE_RESULT_GREATER;
+    else
+      result = COMPARE_RESULT_EQUAL;
+  }
+
+  void visitPositiveInteger(UInt) {
+    result = COMPARE_RESULT_LESS;
+  }
 
   void visitArray(const CollectionData &) {}
   void visitObject(const CollectionData &) {}
-  void visitFloat(Float lhs) {
-    result = sign(lhs + static_cast<Float>(_rhs));
-  }
   void visitString(const char *) {}
   void visitRawJson(const char *, size_t) {}
-  void visitNegativeInteger(UInt lhs) {
-    result = lhs < _rhs ? -1 : lhs > _rhs ? 1 : 0;
-  }
-  void visitPositiveInteger(UInt) {
-    result = 1;
-  }
   void visitBoolean(bool) {}
   void visitNull() {}
 };
 
 struct ObjectComparer {
   const CollectionData *_rhs;
-  int result;
+  CompareResult result;
 
-  explicit ObjectComparer(const CollectionData &rhs) : _rhs(&rhs), result(1) {}
+  explicit ObjectComparer(const CollectionData &rhs)
+      : _rhs(&rhs), result(COMPARE_RESULT_DIFFER) {}
 
   void visitArray(const CollectionData &) {}
   void visitObject(const CollectionData &lhs) {
-    result = lhs.equalsObject(*_rhs) ? 0 : 1;
+    if (lhs.equalsObject(*_rhs))
+      result = COMPARE_RESULT_EQUAL;
   }
   void visitFloat(Float) {}
   void visitString(const char *) {}
@@ -185,19 +228,26 @@ struct ObjectComparer {
 struct RawComparer {
   const char *_rhsData;
   size_t _rhsSize;
-  int result;
+  CompareResult result;
 
   explicit RawComparer(const char *rhsData, size_t rhsSize)
-      : _rhsData(rhsData), _rhsSize(rhsSize), result(1) {}
+      : _rhsData(rhsData), _rhsSize(rhsSize), result(COMPARE_RESULT_DIFFER) {}
+
+  void visitRawJson(const char *lhsData, size_t lhsSize) {
+    size_t size = _rhsSize < lhsSize ? _rhsSize : lhsSize;
+    int n = memcmp(lhsData, _rhsData, size);
+    if (n < 0)
+      result = COMPARE_RESULT_LESS;
+    else if (n > 0)
+      result = COMPARE_RESULT_GREATER;
+    else
+      result = COMPARE_RESULT_EQUAL;
+  }
 
   void visitArray(const CollectionData &) {}
   void visitObject(const CollectionData &) {}
   void visitFloat(Float) {}
   void visitString(const char *) {}
-  void visitRawJson(const char *lhsData, size_t lhsSize) {
-    size_t size = _rhsSize < lhsSize ? _rhsSize : lhsSize;
-    result = memcmp(lhsData, _rhsData, size);
-  }
   void visitNegativeInteger(UInt) {}
   void visitPositiveInteger(UInt) {}
   void visitBoolean(bool) {}
@@ -207,20 +257,18 @@ struct RawComparer {
 template <typename T>
 struct Comparer<T, typename enable_if<IsVisitable<T>::value>::type> {
   T rhs;
-  int result;
+  CompareResult result;
 
-  explicit Comparer(T value) : rhs(value), result(1) {}
+  explicit Comparer(T value) : rhs(value), result(COMPARE_RESULT_DIFFER) {}
 
   void visitArray(const CollectionData &lhs) {
     ArrayComparer comparer(lhs);
-    rhs.accept(comparer);
-    result = -comparer.result;
+    accept(comparer);
   }
 
   void visitObject(const CollectionData &lhs) {
     ObjectComparer comparer(lhs);
-    rhs.accept(comparer);
-    result = -comparer.result;
+    accept(comparer);
   }
 
   void visitFloat(Float lhs) {
@@ -262,13 +310,23 @@ struct Comparer<T, typename enable_if<IsVisitable<T>::value>::type> {
   template <typename TComparer>
   void accept(TComparer &comparer) {
     rhs.accept(comparer);
-    result = -comparer.result;
+    switch (comparer.result) {
+      case COMPARE_RESULT_GREATER:
+        result = COMPARE_RESULT_LESS;
+        break;
+      case COMPARE_RESULT_LESS:
+        result = COMPARE_RESULT_GREATER;
+        break;
+      default:
+        result = comparer.result;
+        break;
+    }
   }
 };
 
 template <typename TData>
 template <typename T>
-int VariantRefBase<TData>::compare(const T &rhs) const {
+CompareResult VariantRefBase<TData>::compare(const T &rhs) const {
   Comparer<T> comparer(rhs);
   variantAccept(_data, comparer);
   return comparer.result;

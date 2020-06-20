@@ -462,3 +462,26 @@ TEST_CASE_METHOD(VariantComparisionFixture,
     assertGreaterThan(false);
   }
 }
+
+TEST_CASE("Compare JsonVariant with JsonVariant") {
+  StaticJsonDocument<256> doc;
+  JsonVariant a = doc.addElement();
+  JsonVariant b = doc.addElement();
+
+  SECTION("null vs. null") {
+    REQUIRE(a == b);
+    REQUIRE(a <= b);
+    REQUIRE(a >= b);
+    REQUIRE_FALSE(a != b);
+    REQUIRE_FALSE(a < b);
+    REQUIRE_FALSE(a > b);
+  }
+
+  SECTION("null vs 0") {
+    b.set(0);
+    REQUIRE(a != b);
+    REQUIRE_FALSE(a < b);
+    REQUIRE_FALSE(a > b);
+    REQUIRE_FALSE(a == b);
+  }
+}
