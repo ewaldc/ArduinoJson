@@ -15,7 +15,11 @@ namespace ARDUINOJSON_NAMESPACE {
 
 class CollectionData;
 
-struct Visitor {
+struct ComparerBase {
+  CompareResult result;
+
+  ComparerBase() : result(COMPARE_RESULT_DIFFER) {}
+
   void visitArray(const CollectionData &) {}
   void visitBoolean(bool) {}
   void visitFloat(Float) {}
@@ -31,11 +35,11 @@ template <typename T, typename Enable = void>
 struct Comparer;
 
 template <typename T>
-struct Comparer<T, typename enable_if<IsString<T>::value>::type> : Visitor {
+struct Comparer<T, typename enable_if<IsString<T>::value>::type>
+    : ComparerBase {
   T rhs;
-  CompareResult result;
 
-  explicit Comparer(T value) : rhs(value), result(COMPARE_RESULT_DIFFER) {}
+  explicit Comparer(T value) : rhs(value) {}
 
   void visitString(const char *lhs) {
     int i = adaptString(rhs).compare(lhs);
@@ -56,11 +60,10 @@ struct Comparer<T, typename enable_if<IsString<T>::value>::type> : Visitor {
 template <typename T>
 struct Comparer<T, typename enable_if<is_integral<T>::value ||
                                       is_floating_point<T>::value>::type>
-    : Visitor {
+    : ComparerBase {
   T rhs;
-  CompareResult result;
 
-  explicit Comparer(T value) : rhs(value), result(COMPARE_RESULT_DIFFER) {}
+  explicit Comparer(T value) : rhs(value) {}
 
   void visitFloat(Float lhs) {
     Float diff = lhs - static_cast<Float>(rhs);
@@ -92,11 +95,10 @@ struct Comparer<T, typename enable_if<is_integral<T>::value ||
 };
 
 template <>
-struct Comparer<bool, void> : Visitor {
+struct Comparer<bool, void> : ComparerBase {
   bool rhs;
-  CompareResult result;
 
-  explicit Comparer(bool value) : rhs(value), result(COMPARE_RESULT_DIFFER) {}
+  explicit Comparer(bool value) : rhs(value) {}
 
   void visitBoolean(bool lhs) {
     if (lhs < rhs)
@@ -108,11 +110,7 @@ struct Comparer<bool, void> : Visitor {
   }
 };
 
-struct NullComparer : Visitor {
-  CompareResult result;
-
-  explicit NullComparer() : result(COMPARE_RESULT_DIFFER) {}
-
+struct NullComparer : ComparerBase {
   void visitNull() {
     result = COMPARE_RESULT_EQUAL;
   }
@@ -125,12 +123,10 @@ struct Comparer<decltype(nullptr), void> : NullComparer {
 };
 #endif
 
-struct ArrayComparer : Visitor {
+struct ArrayComparer : ComparerBase {
   const CollectionData *_rhs;
-  CompareResult result;
 
-  explicit ArrayComparer(const CollectionData &rhs)
-      : _rhs(&rhs), result(COMPARE_RESULT_DIFFER) {}
+  explicit ArrayComparer(const CollectionData &rhs) : _rhs(&rhs) {}
 
   void visitArray(const CollectionData &lhs) {
     if (lhs.equalsArray(*_rhs))
@@ -138,12 +134,10 @@ struct ArrayComparer : Visitor {
   }
 };
 
-struct NegativeIntegerComparer : Visitor {
+struct NegativeIntegerComparer : ComparerBase {
   UInt _rhs;
-  CompareResult result;
 
-  explicit NegativeIntegerComparer(UInt rhs)
-      : _rhs(rhs), result(COMPARE_RESULT_DIFFER) {}
+  explicit NegativeIntegerComparer(UInt rhs) : _rhs(rhs) {}
 
   void visitFloat(Float lhs) {
     if (lhs < static_cast<Float>(_rhs))
@@ -168,12 +162,10 @@ struct NegativeIntegerComparer : Visitor {
   }
 };
 
-struct ObjectComparer : Visitor {
+struct ObjectComparer : ComparerBase {
   const CollectionData *_rhs;
-  CompareResult result;
 
-  explicit ObjectComparer(const CollectionData &rhs)
-      : _rhs(&rhs), result(COMPARE_RESULT_DIFFER) {}
+  explicit ObjectComparer(const CollectionData &rhs) : _rhs(&rhs) {}
 
   void visitObject(const CollectionData &lhs) {
     if (lhs.equalsObject(*_rhs))
@@ -181,13 +173,12 @@ struct ObjectComparer : Visitor {
   }
 };
 
-struct RawComparer : Visitor {
+struct RawComparer : ComparerBase {
   const char *_rhsData;
   size_t _rhsSize;
-  CompareResult result;
 
   explicit RawComparer(const char *rhsData, size_t rhsSize)
-      : _rhsData(rhsData), _rhsSize(rhsSize), result(COMPARE_RESULT_DIFFER) {}
+      : _rhsData(rhsData), _rhsSize(rhsSize) {}
 
   void visitRawJson(const char *lhsData, size_t lhsSize) {
     size_t size = _rhsSize < lhsSize ? _rhsSize : lhsSize;
@@ -202,11 +193,11 @@ struct RawComparer : Visitor {
 };
 
 template <typename T>
-struct Comparer<T, typename enable_if<IsVisitable<T>::value>::type> : Visitor {
+struct Comparer<T, typename enable_if<IsVisitable<T>::value>::type>
+    : ComparerBase {
   T rhs;
-  CompareResult result;
 
-  explicit Comparer(T value) : rhs(value), result(COMPARE_RESULT_DIFFER) {}
+  explicit Comparer(T value) : rhs(value) {}
 
   void visitArray(const CollectionData &lhs) {
     ArrayComparer comparer(lhs);
