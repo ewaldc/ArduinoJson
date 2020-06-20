@@ -106,22 +106,22 @@ struct VariantOperators {
   // value <= TVariant
   template <typename T>
   friend bool operator<=(T *lhs, TVariant rhs) {
-    return rhs.compare(lhs) & COMPARE_RESULT_GREATER_OR_EQUAL;
+    return rhs.compare(lhs) & COMPARE_RESULT_GREATER_OR_EQUAL != 0;
   }
   template <typename T>
   friend bool operator<=(const T &lhs, TVariant rhs) {
-    return rhs.compare(lhs) & COMPARE_RESULT_GREATER_OR_EQUAL;
+    return rhs.compare(lhs) & COMPARE_RESULT_GREATER_OR_EQUAL != 0;
   }
 
   // TVariant <= value
   template <typename T>
   friend bool operator<=(TVariant lhs, T *rhs) {
-    return lhs.compare(rhs) & COMPARE_RESULT_LESS_OR_EQUAL;
+    return lhs.compare(rhs) & COMPARE_RESULT_LESS_OR_EQUAL != 0;
   }
   template <typename T>
   friend typename enable_if<!IsVisitable<T>::value, bool>::type operator<=(
       TVariant lhs, const T &rhs) {
-    return lhs.compare(rhs) & COMPARE_RESULT_LESS_OR_EQUAL;
+    return lhs.compare(rhs) & COMPARE_RESULT_LESS_OR_EQUAL != 0;
   }
 
   // value > TVariant
@@ -148,22 +148,22 @@ struct VariantOperators {
   // value >= TVariant
   template <typename T>
   friend bool operator>=(T *lhs, TVariant rhs) {
-    return rhs.compare(lhs) & COMPARE_RESULT_LESS_OR_EQUAL;
+    return rhs.compare(lhs) & COMPARE_RESULT_LESS_OR_EQUAL != 0;
   }
   template <typename T>
   friend bool operator>=(const T &lhs, TVariant rhs) {
-    return rhs.compare(lhs) & COMPARE_RESULT_LESS_OR_EQUAL;
+    return rhs.compare(lhs) & COMPARE_RESULT_LESS_OR_EQUAL != 0;
   }
 
   // TVariant >= value
   template <typename T>
   friend bool operator>=(TVariant lhs, T *rhs) {
-    return lhs.compare(rhs) & COMPARE_RESULT_GREATER_OR_EQUAL;
+    return lhs.compare(rhs) & COMPARE_RESULT_GREATER_OR_EQUAL != 0;
   }
   template <typename T>
   friend typename enable_if<!IsVisitable<T>::value, bool>::type operator>=(
       TVariant lhs, const T &rhs) {
-    return lhs.compare(rhs) & COMPARE_RESULT_GREATER_OR_EQUAL;
+    return lhs.compare(rhs) & COMPARE_RESULT_GREATER_OR_EQUAL != 0;
   }
 };
 }  // namespace ARDUINOJSON_NAMESPACE
