@@ -150,9 +150,9 @@ struct NegativeIntegerComparer : ComparerBase {
 
   void visitNegativeInteger(UInt lhs) {
     if (lhs < _rhs)
-      result = COMPARE_RESULT_LESS;
-    else if (lhs > _rhs)
       result = COMPARE_RESULT_GREATER;
+    else if (lhs > _rhs)
+      result = COMPARE_RESULT_LESS;
     else
       result = COMPARE_RESULT_EQUAL;
   }

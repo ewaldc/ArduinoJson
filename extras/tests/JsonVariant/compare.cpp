@@ -210,257 +210,6 @@ TEST_CASE("JsonVariant comparisons") {
     REQUIRE_FALSE((variant == vla));
   }
 #endif
-
-  DynamicJsonDocument doc1(4096), doc2(4096), doc3(4096);
-  JsonVariant variant1 = doc1.to<JsonVariant>();
-  JsonVariant variant2 = doc2.to<JsonVariant>();
-  JsonVariant variant3 = doc3.to<JsonVariant>();
-
-  SECTION("Variants containing integers") {
-    variant1.set(42);
-    variant2.set(42);
-    variant3.set(666);
-
-    REQUIRE(variant1 == variant2);
-    REQUIRE_FALSE(variant1 != variant2);
-
-    REQUIRE(variant1 != variant3);
-    REQUIRE_FALSE(variant1 == variant3);
-  }
-
-  SECTION("Variants containing linked strings") {
-    // create two identical strings at different addresses
-    char hello1[] = "hello";
-    char hello2[] = "hello";
-    REQUIRE(hello1 != hello2);
-
-    variant1.set(hello1);
-    variant2.set(hello2);
-    variant3.set("world");
-
-    REQUIRE(variant1 == variant2);
-    REQUIRE_FALSE(variant1 != variant2);
-
-    REQUIRE(variant1 != variant3);
-    REQUIRE_FALSE(variant1 == variant3);
-  }
-
-  SECTION("Variants containing owned strings") {
-    variant1.set(std::string("hello"));
-    variant2.set(std::string("hello"));
-    variant3.set(std::string("world"));
-
-    REQUIRE(variant1 == variant2);
-    REQUIRE_FALSE(variant1 != variant2);
-
-    REQUIRE(variant1 != variant3);
-    REQUIRE_FALSE(variant1 == variant3);
-  }
-
-  SECTION("Variants containing linked raws") {
-    // create two identical strings at different addresses
-    char hello1[] = "hello";
-    char hello2[] = "hello";
-    REQUIRE(hello1 != hello2);
-
-    variant1.set(serialized(hello1));
-    variant2.set(serialized(hello2));
-    variant3.set(serialized("world"));
-
-    REQUIRE(variant1 == variant2);
-    REQUIRE_FALSE(variant1 != variant2);
-
-    REQUIRE(variant1 != variant3);
-    REQUIRE_FALSE(variant1 == variant3);
-  }
-
-  SECTION("Variants containing owned raws") {
-    variant1.set(serialized(std::string("hello")));
-    variant2.set(serialized(std::string("hello")));
-    variant3.set(serialized(std::string("world")));
-
-    REQUIRE(variant1 == variant2);
-    REQUIRE_FALSE(variant1 != variant2);
-
-    REQUIRE(variant1 != variant3);
-    REQUIRE_FALSE(variant1 == variant3);
-  }
-
-  SECTION("Variants containing mixed strings (issue #1051)") {
-    variant1.set("hello");
-    variant2.set(std::string("hello"));
-
-    REQUIRE(variant1 == variant2);
-    REQUIRE_FALSE(variant1 != variant2);
-
-    REQUIRE(variant2 == variant1);
-    REQUIRE_FALSE(variant2 != variant1);
-  }
-
-  SECTION("Variants containing double") {
-    variant1.set(42.0);
-    variant2.set(42.0);
-    variant3.set(666.0);
-
-    REQUIRE(variant1 == variant2);
-    REQUIRE_FALSE(variant1 != variant2);
-
-    REQUIRE(variant1 != variant3);
-    REQUIRE_FALSE(variant1 == variant3);
-  }
-
-  SECTION("BoolInVariant") {
-    variant1.set(true);
-    variant2.set(true);
-    variant3.set(false);
-
-    REQUIRE(variant1 == variant2);
-    REQUIRE_FALSE(variant1 != variant2);
-
-    REQUIRE(variant1 != variant3);
-    REQUIRE_FALSE(variant1 == variant3);
-  }
-
-  SECTION("ArrayInVariant") {
-    JsonArray array1 = variant1.to<JsonArray>();
-    JsonArray array2 = variant2.to<JsonArray>();
-
-    array1.add(42);
-    array2.add(42);
-
-    REQUIRE(variant1 == variant2);
-    REQUIRE_FALSE(variant1 != variant2);
-
-    REQUIRE(variant1 != variant3);
-    REQUIRE_FALSE(variant1 == variant3);
-  }
-
-  SECTION("ObjectInVariant") {
-    JsonObject obj1 = variant1.to<JsonObject>();
-    JsonObject obj2 = variant2.to<JsonObject>();
-
-    obj1["hello"] = "world";
-    obj2["hello"] = "world";
-
-    REQUIRE(variant1 == variant2);
-    REQUIRE_FALSE(variant1 != variant2);
-
-    REQUIRE(variant1 != variant3);
-    REQUIRE_FALSE(variant1 == variant3);
-  }
-}
-
-class VariantComparisionFixture {
- private:
-  StaticJsonDocument<256> doc;
-  JsonVariant variant;
-
- public:
-  VariantComparisionFixture() : variant(doc.to<JsonVariant>()) {}
-
- protected:
-  template <typename T>
-  void setValue(const T& value) {
-    variant.set(value);
-  }
-
-  template <typename T>
-  void assertEqualsTo(const T& value) {
-    REQUIRE(variant == value);
-    REQUIRE(value == variant);
-
-    REQUIRE_FALSE(variant != value);
-    REQUIRE_FALSE(value != variant);
-  }
-
-  template <typename T>
-  void assertDiffersFrom(const T& value) {
-    REQUIRE(variant != value);
-    REQUIRE(value != variant);
-
-    REQUIRE_FALSE(variant == value);
-    REQUIRE_FALSE(value == variant);
-  }
-
-  template <typename T>
-  void assertGreaterThan(const T& value) {
-    REQUIRE((variant > value));
-    REQUIRE((variant >= value));
-    REQUIRE(value < variant);
-    REQUIRE(value <= variant);
-
-    REQUIRE_FALSE((variant < value));
-    REQUIRE_FALSE((variant <= value));
-    REQUIRE_FALSE(value > variant);
-    REQUIRE_FALSE(value >= variant);
-  }
-
-  template <typename T>
-  void assertLowerThan(const T& value) {
-    REQUIRE(variant < value);
-    REQUIRE(variant <= value);
-    REQUIRE(value > variant);
-    REQUIRE(value >= variant);
-
-    REQUIRE_FALSE(variant > value);
-    REQUIRE_FALSE(variant >= value);
-    REQUIRE_FALSE(value < variant);
-    REQUIRE_FALSE(value <= variant);
-  }
-};
-
-TEST_CASE_METHOD(VariantComparisionFixture,
-                 "Compare variant with another type") {
-  SECTION("null") {
-    assertDiffersFrom(3);
-    assertDiffersFrom("world");
-  }
-
-  SECTION("string") {
-    setValue("hello");
-    assertEqualsTo("hello");
-    assertDiffersFrom(3);
-    assertDiffersFrom("world");
-    assertGreaterThan("helln");
-    assertLowerThan("hellp");
-  }
-
-  SECTION("positive integer") {
-    setValue(42);
-    assertEqualsTo(42);
-    assertDiffersFrom(43);
-    assertGreaterThan(41);
-    assertLowerThan(43);
-    assertDiffersFrom("world");
-  }
-
-  SECTION("negative integer") {
-    setValue(-42);
-    assertEqualsTo(-42);
-    assertDiffersFrom(42);
-    assertGreaterThan(-43);
-    assertLowerThan(-41);
-    assertDiffersFrom("world");
-  }
-
-  SECTION("double") {
-    setValue(42.0);
-    assertEqualsTo(42.0);
-    assertDiffersFrom(42.1);
-    assertGreaterThan(41.0);
-    assertLowerThan(43.0);
-    assertDiffersFrom("42.0");
-  }
-
-  SECTION("true") {
-    setValue(true);
-    assertEqualsTo(true);
-    assertDiffersFrom(false);
-    assertDiffersFrom(1);
-    assertDiffersFrom("true");
-    assertDiffersFrom(1.0);
-    assertGreaterThan(false);
-  }
 }
 
 TEST_CASE("Compare JsonVariant with JsonVariant") {
@@ -468,8 +217,8 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
   JsonVariant a = doc.addElement();
   JsonVariant b = doc.addElement();
 
-  SECTION("a = null") {
-    SECTION("b = null") {
+  SECTION("null vs ...") {
+    SECTION("null vs null") {
       REQUIRE(a == b);
       REQUIRE(a <= b);
       REQUIRE(a >= b);
@@ -478,7 +227,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a > b);
     }
 
-    SECTION("b = 0") {
+    SECTION("null vs 0") {
       b.set(0);
 
       REQUIRE(a != b);
@@ -489,7 +238,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = -1") {
+    SECTION("null vs -1") {
       b.set(-1);
 
       REQUIRE(a != b);
@@ -500,7 +249,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = 'hello'") {
+    SECTION("null vs 'hello'") {
       b.set("hello");
 
       REQUIRE(a != b);
@@ -511,7 +260,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = {}") {
+    SECTION("null vs {}") {
       b.to<JsonObject>();
 
       REQUIRE(a != b);
@@ -522,7 +271,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = []") {
+    SECTION("null vs []") {
       b.to<JsonArray>();
 
       REQUIRE(a != b);
@@ -534,10 +283,10 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
     }
   }
 
-  SECTION("a = 1") {
+  SECTION("1 vs ...") {
     a.set(1);
 
-    SECTION("b = 2") {
+    SECTION("1 vs 2") {
       b.set(2);
 
       REQUIRE(a != b);
@@ -548,7 +297,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = 1.1") {
+    SECTION("1 vs 1.1") {
       b.set(1.1);
 
       REQUIRE(a != b);
@@ -559,7 +308,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = -1") {
+    SECTION("1 vs -1") {
       b.set(-1);
 
       REQUIRE(a != b);
@@ -570,7 +319,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a == b);
     }
 
-    SECTION("b = 'hello'") {
+    SECTION("1 vs 'hello'") {
       b.set("hello");
 
       REQUIRE(a != b);
@@ -582,10 +331,80 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
     }
   }
 
-  SECTION("a = -1") {
-    a.set(-1);
+  SECTION("1.1 vs ...") {
+    a.set(1.1);
 
-    SECTION("b = null") {
+    SECTION("1.1 vs 2") {
+      b.set(2);
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("1.1 vs 1.0") {
+      b.set(1.0);
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+    }
+
+    SECTION("1.1 vs 1.1") {
+      b.set(1.1);
+
+      REQUIRE(a <= b);
+      REQUIRE(a == b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a > b);
+    }
+
+    SECTION("1.1 vs 1.2") {
+      b.set(1.2);
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("1.1 vs -1") {
+      b.set(-1);
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+    }
+
+    SECTION("1.1 vs 'hello'") {
+      b.set("hello");
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+  }
+
+  SECTION("-2 vs ...") {
+    a.set(-2);
+
+    SECTION("-2 vs null") {
       REQUIRE(a != b);
       REQUIRE_FALSE(a < b);
       REQUIRE_FALSE(a <= b);
@@ -594,7 +413,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = 0") {
+    SECTION("-2 vs 0") {
       b.set(0);
 
       REQUIRE(a != b);
@@ -605,8 +424,8 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = -0.9") {
-      b.set(-0.9);
+    SECTION("-2 vs -1.9") {
+      b.set(-1.9);
 
       REQUIRE(a != b);
       REQUIRE(a < b);
@@ -616,19 +435,8 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = -1.1") {
-      b.set(-1.1);
-
-      REQUIRE(a != b);
-      REQUIRE(a > b);
-      REQUIRE(a >= b);
-      REQUIRE_FALSE(a < b);
-      REQUIRE_FALSE(a <= b);
-      REQUIRE_FALSE(a == b);
-    }
-
-    SECTION("b = -1") {
-      b.set(-1);
+    SECTION("-2 vs -2.0") {
+      b.set(-2.0);
 
       REQUIRE(a <= b);
       REQUIRE(a == b);
@@ -638,7 +446,51 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a > b);
     }
 
-    SECTION("b = 'hello'") {
+    SECTION("-2 vs -2.1") {
+      b.set(-2.1);
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+    }
+
+    SECTION("-2 vs -1") {
+      b.set(-1);
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("-2 vs -2") {
+      b.set(-2);
+
+      REQUIRE(a <= b);
+      REQUIRE(a == b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a > b);
+    }
+
+    SECTION("-2 vs -3") {
+      b.set(-3);
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+    }
+
+    SECTION("-2 vs 'hello'") {
       b.set("hello");
 
       REQUIRE(a != b);
@@ -650,10 +502,10 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
     }
   }
 
-  SECTION("a = [1]") {
+  SECTION("[1] vs ...") {
     a.add(1);
 
-    SECTION("b = null") {
+    SECTION("[1] vs null") {
       REQUIRE(a != b);
       REQUIRE_FALSE(a < b);
       REQUIRE_FALSE(a <= b);
@@ -662,7 +514,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = [1]") {
+    SECTION("[1] vs [1]") {
       b.add(1);
 
       REQUIRE(a <= b);
@@ -673,7 +525,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a > b);
     }
 
-    SECTION("b = [2]") {
+    SECTION("[1] vs [2]") {
       b.add(2);
 
       REQUIRE(a != b);
@@ -684,7 +536,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = 'hello'") {
+    SECTION("[1] vs 'hello'") {
       b.set("hello");
 
       REQUIRE(a != b);
@@ -696,10 +548,10 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
     }
   }
 
-  SECTION("a = {x:1}") {
+  SECTION("{x:1} vs ...") {
     a["x"] = 1;
 
-    SECTION("b = null") {
+    SECTION("{x:1} vs null") {
       REQUIRE(a != b);
       REQUIRE_FALSE(a < b);
       REQUIRE_FALSE(a <= b);
@@ -708,7 +560,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = {x:1}") {
+    SECTION("{x:1} vs {x:1}") {
       b["x"] = 1;
 
       REQUIRE(a <= b);
@@ -719,7 +571,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a > b);
     }
 
-    SECTION("b = {x:2}") {
+    SECTION("{x:1} vs {x:2}") {
       b["x"] = 2;
 
       REQUIRE(a != b);
@@ -730,7 +582,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = {y:1}") {
+    SECTION("{x:1} vs {y:1}") {
       b["y"] = 2;
 
       REQUIRE(a != b);
@@ -741,7 +593,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = 'hello'") {
+    SECTION("{x:1} vs 'hello'") {
       b.set("hello");
 
       REQUIRE(a != b);
@@ -753,10 +605,10 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
     }
   }
 
-  SECTION("a = 'hello'") {
+  SECTION("'hello' vs ...") {
     a.set("hello");
 
-    SECTION("b = null") {
+    SECTION("'hello' vs null") {
       REQUIRE(a != b);
       REQUIRE_FALSE(a < b);
       REQUIRE_FALSE(a <= b);
@@ -765,7 +617,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = 'hello'") {
+    SECTION("'hello' vs 'hello'") {
       b.set("hello");
 
       REQUIRE(a <= b);
@@ -776,7 +628,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a > b);
     }
 
-    SECTION("b = 'world'") {
+    SECTION("'hello' vs 'world'") {
       b.set("world");
 
       REQUIRE(a != b);
@@ -787,7 +639,7 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a >= b);
     }
 
-    SECTION("b = 'abcd'") {
+    SECTION("'hello' vs 'abcd'") {
       b.set("abcd");
 
       REQUIRE(a != b);
@@ -798,7 +650,75 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a == b);
     }
 
-    SECTION("b = {}") {
+    SECTION("'hello' vs {}") {
+      b.to<JsonObject>();
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+  }
+
+  SECTION("serialized('hello') vs ...") {
+    a.set(serialized("hello"));
+
+    SECTION("serialized('hello') vs null") {
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("serialized('hello') vs 'hello'") {
+      b.set("hello");
+
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("serialized('hello') vs serialized('hello')") {
+      b.set(serialized("hello"));
+
+      REQUIRE(a <= b);
+      REQUIRE(a == b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a > b);
+    }
+
+    SECTION("serialized('hello') vs serialized('world')") {
+      b.set(serialized("world"));
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("serialized('hello') vs serialized('abcd')") {
+      b.set(serialized("abcd"));
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+    }
+
+    SECTION("serialized('hello') vs {}") {
       b.to<JsonObject>();
 
       REQUIRE(a != b);
