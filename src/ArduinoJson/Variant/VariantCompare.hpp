@@ -92,6 +92,10 @@ struct Comparer<T, typename enable_if<is_integral<T>::value ||
     else
       result = COMPARE_RESULT_EQUAL;
   }
+
+  void visitBoolean(bool lhs) {
+    visitPositiveInteger(static_cast<UInt>(lhs));
+  }
 };
 
 template <>
@@ -101,6 +105,28 @@ struct Comparer<bool, void> : ComparerBase {
   explicit Comparer(bool value) : rhs(value) {}
 
   void visitBoolean(bool lhs) {
+    if (lhs < rhs)
+      result = COMPARE_RESULT_LESS;
+    else if (lhs > rhs)
+      result = COMPARE_RESULT_GREATER;
+    else
+      result = COMPARE_RESULT_EQUAL;
+  }
+
+  void visitPositiveInteger(UInt lhs) {
+    if (lhs < rhs)
+      result = COMPARE_RESULT_LESS;
+    else if (lhs > rhs)
+      result = COMPARE_RESULT_GREATER;
+    else
+      result = COMPARE_RESULT_EQUAL;
+  }
+
+  void visitNegativeInteger(UInt) {
+    result = COMPARE_RESULT_LESS;
+  }
+
+  void visitFloat(Float lhs) {
     if (lhs < rhs)
       result = COMPARE_RESULT_LESS;
     else if (lhs > rhs)
@@ -140,9 +166,9 @@ struct NegativeIntegerComparer : ComparerBase {
   explicit NegativeIntegerComparer(UInt rhs) : _rhs(rhs) {}
 
   void visitFloat(Float lhs) {
-    if (lhs < static_cast<Float>(_rhs))
+    if (lhs + static_cast<Float>(_rhs) < 0)
       result = COMPARE_RESULT_LESS;
-    else if (lhs > static_cast<Float>(_rhs))
+    else if (lhs + static_cast<Float>(_rhs) > 0)
       result = COMPARE_RESULT_GREATER;
     else
       result = COMPARE_RESULT_EQUAL;
@@ -158,6 +184,10 @@ struct NegativeIntegerComparer : ComparerBase {
   }
 
   void visitPositiveInteger(UInt) {
+    result = COMPARE_RESULT_GREATER;
+  }
+
+  void visitBoolean(bool) {
     result = COMPARE_RESULT_GREATER;
   }
 };

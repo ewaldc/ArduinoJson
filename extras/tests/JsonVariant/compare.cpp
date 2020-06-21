@@ -283,8 +283,168 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
     }
   }
 
+  SECTION("false vs ...") {
+    a.set(false);
+
+    SECTION("false vs false") {
+      b.set(false);
+
+      REQUIRE(a <= b);
+      REQUIRE(a == b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a > b);
+    }
+
+    SECTION("false vs true") {
+      b.set(true);
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("false vs 0") {
+      b.set(0);
+
+      REQUIRE(a <= b);
+      REQUIRE(a == b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a > b);
+    }
+
+    SECTION("false vs 1") {
+      b.set(1);
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("false vs -1") {
+      b.set(-1);
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+    }
+  }
+
+  SECTION("true vs ...") {
+    a.set(true);
+
+    SECTION("true vs false") {
+      b.set(false);
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+    }
+
+    SECTION("true vs true") {
+      b.set(true);
+
+      REQUIRE(a <= b);
+      REQUIRE(a == b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a > b);
+    }
+
+    SECTION("true vs 0") {
+      b.set(0);
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+    }
+
+    SECTION("true vs 1") {
+      b.set(1);
+
+      REQUIRE(a <= b);
+      REQUIRE(a == b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a > b);
+    }
+
+    SECTION("true vs 2") {
+      b.set(2);
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("true vs -1") {
+      b.set(-1);
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+    }
+  }
+
   SECTION("1 vs ...") {
     a.set(1);
+
+    SECTION("1 vs null") {
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("1 vs false") {
+      b.set(false);
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+    }
+
+    SECTION("1 vs true") {
+      b.set(true);
+
+      REQUIRE(a <= b);
+      REQUIRE(a == b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a > b);
+    }
 
     SECTION("1 vs 2") {
       b.set(2);
@@ -328,6 +488,21 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a == b);
       REQUIRE_FALSE(a > b);
       REQUIRE_FALSE(a >= b);
+    }
+  }
+
+  SECTION("2 vs ...") {
+    a.set(2);
+
+    SECTION("2 vs true") {
+      b.set(true);
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
     }
   }
 
@@ -408,6 +583,17 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE(a != b);
       REQUIRE_FALSE(a < b);
       REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("-2 vs false") {
+      b.set(false);
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
       REQUIRE_FALSE(a == b);
       REQUIRE_FALSE(a > b);
       REQUIRE_FALSE(a >= b);
@@ -499,6 +685,107 @@ TEST_CASE("Compare JsonVariant with JsonVariant") {
       REQUIRE_FALSE(a == b);
       REQUIRE_FALSE(a > b);
       REQUIRE_FALSE(a >= b);
+    }
+  }
+
+  SECTION("-2.0 vs ...") {
+    a.set(-2.0);
+
+    SECTION("-2.0 vs null") {
+      REQUIRE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("-2.0 vs false") {
+      b.set(false);
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("-2.0 vs 0") {
+      b.set(0);
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("-2.0 vs -1.9") {
+      b.set(-1.9);
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("-2.0 vs -2.0") {
+      b.set(-2.0);
+
+      REQUIRE(a <= b);
+      REQUIRE(a == b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a > b);
+    }
+
+    SECTION("-2.0 vs -2.1") {
+      b.set(-2.1);
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
+    }
+
+    SECTION("-2.0 vs -1") {
+      b.set(-1);
+
+      REQUIRE(a != b);
+      REQUIRE(a < b);
+      REQUIRE(a <= b);
+      REQUIRE_FALSE(a == b);
+      REQUIRE_FALSE(a > b);
+      REQUIRE_FALSE(a >= b);
+    }
+
+    SECTION("-2.0 vs -2") {
+      b.set(-2);
+
+      REQUIRE(a <= b);
+      REQUIRE(a == b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a != b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a > b);
+    }
+
+    SECTION("-2.0 vs -3") {
+      b.set(-3);
+
+      REQUIRE(a != b);
+      REQUIRE(a > b);
+      REQUIRE(a >= b);
+      REQUIRE_FALSE(a < b);
+      REQUIRE_FALSE(a <= b);
+      REQUIRE_FALSE(a == b);
     }
   }
 
