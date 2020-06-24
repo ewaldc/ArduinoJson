@@ -52,6 +52,21 @@ class JsonDeserializer {
  private:
   JsonDeserializer &operator=(const JsonDeserializer &);  // non-copiable
 
+  #ifdef ARDUINOJSON_ENABLE_STRING_DEDUP
+  const char *findString(const char* begin, const char* str) {
+		const char *p = begin, *q = str;
+		const size_t len = strlen(str);
+		while (p < str) {
+			while (*p && *p++ == *q++);
+			if (len == q - str && *q == '\0')
+				return p - len; // we have a match
+			q = str;	    // reset pointer to key
+			while (*p++); // skip to next string in string pool
+		}
+		return nullptr; // we reached the new string, so there is no duplicate
+	}
+  #endif
+  
   char current() {
     return _latch.current();
   }
@@ -247,6 +262,13 @@ class JsonDeserializer {
           if (!slot)
             return DeserializationError::NoMemory;
 
+  #ifdef ARDUINOJSON_ENABLE_STRING_DEDUP
+					const char *lookupString = findString((const char *)_pool->buffer(), key.value);
+					if (lookupString) {
+						_pool->reclaimLastString(key.value);
+						key.value = lookupString;
+					}
+  #endif
           slot->setOwnedKey(make_not_null(key.value));
 
           variant = slot->data();
@@ -344,6 +366,13 @@ class JsonDeserializer {
     StringOrError result = parseQuotedString();
     if (result.err)
       return result.err;
+  #ifdef ARDUINOJSON_ENABLE_STRING_DEDUP
+    const char *lookupString = findString((const char *)_pool->buffer(), result.value);
+    if (lookupString) {
+      _pool->reclaimLastString(result.value);
+      result.value = lookupString;
+    }
+  #endif
     variant.setOwnedString(make_not_null(result.value));
     return DeserializationError::Ok;
   }

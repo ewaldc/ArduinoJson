@@ -38,6 +38,15 @@ class MemoryPool {
     return _begin;
   }
 
+  const char* left() {
+    return (const char*) _left;
+  }
+
+  VariantSlot* rootSlot() {
+		VariantSlot *root = (VariantSlot *)_end;
+		return --root;
+	}
+
   // Gets the capacity of the memoryPool in bytes
   size_t capacity() const {
     return size_t(_end - _begin);

@@ -93,6 +93,10 @@ class VariantData {
     return const_cast<VariantData *>(this)->asObject();
   }
 
+  CollectionData &asCollection() {
+    return _content.asCollection;
+  }
+
   bool copyFrom(const VariantData &src, MemoryPool *pool) {
     switch (src.type()) {
       case VALUE_IS_ARRAY:
@@ -379,6 +383,14 @@ class VariantData {
       _content.asString += stringDistance;
     if (_flags & COLLECTION_MASK)
       _content.asCollection.movePointers(stringDistance, variantDistance);
+  }
+
+  uint8_t flags() {
+    return _flags;
+  }
+
+  VariantContent &content() {
+    return _content;
   }
 
  private:

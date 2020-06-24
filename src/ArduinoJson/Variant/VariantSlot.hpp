@@ -83,6 +83,10 @@ class VariantSlot {
     return _key;
   }
 
+  uint8_t flags() {
+    return _flags;
+  }
+
   bool ownsKey() const {
     return (_flags & KEY_IS_OWNED) != 0;
   }
