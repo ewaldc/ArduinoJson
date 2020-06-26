@@ -52,20 +52,36 @@ class JsonDeserializer {
  private:
   JsonDeserializer &operator=(const JsonDeserializer &);  // non-copiable
 
-  #ifdef ARDUINOJSON_ENABLE_STRING_DEDUP
+ #ifdef ARDUINOJSON_ENABLE_STRING_DEDUP
   const char *findString(const char* begin, const char* str) {
-		const char *p = begin, *q = str;
-		const size_t len = strlen(str);
+ 		const char *p = begin, *q = str;
+		const size_t len = strlen(str) + 1;
 		while (p < str) {
-			while (*p && *p++ == *q++);
-			if (len == q - str && *q == '\0')
-				return p - len; // we have a match
-			q = str;	    // reset pointer to key
-			while (*p++); // skip to next string in string pool
+			size_t l = len;
+			while (l && *p++ == *q++) l--;
+			if (l == 0)
+				return p - len;
+			q = str;	
+			while (*p++);
 		}
 		return nullptr; // we reached the new string, so there is no duplicate
+}
+	/* Alternative implementation
+	const char *findString(VariantSlot *v, const char* key) {
+		VariantData& vd = reinterpret_cast<VariantData &>(v->_content);
+		if (vd.isCollection())
+			v = v->_content.asCollection.head();
+		VariantSlot* s = v;
+		for (VariantSlot* s = v; s; s = s->next()) {
+			VariantData& vd = reinterpret_cast<VariantData &>(s->_content);
+			if (!safe_strcmp(s->key(), key))
+				return s->key();
+			if (vd.isCollection())
+				return findString(s, key);
+		}
 	}
-  #endif
+  */
+ #endif
   
   char current() {
     return _latch.current();
