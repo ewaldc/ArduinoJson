@@ -8,13 +8,15 @@
 #include <ArduinoJson/Misc/Visitable.hpp>
 #include <ArduinoJson/Serialization/measure.hpp>
 #include <ArduinoJson/Serialization/serialize.hpp>
+#include <ArduinoJson/Memory/MemoryPool.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
 template <typename TWriter>
 class JsonSerializer {
  public:
-  JsonSerializer(TWriter writer) : _formatter(writer) {}
+  JsonSerializer(TWriter writer, MemoryPool &pool) : _formatter(writer), _pool(pool) {}
+	//JsonSerializer(TWriter writer) : _formatter(writer) {}
 
   FORCE_INLINE void visitArray(const CollectionData &array) {
     write('[');
@@ -40,7 +42,7 @@ class JsonSerializer {
     VariantSlot *slot = object.head();
 
     while (slot != 0) {
-      _formatter.writeString(slot->key());
+      _formatter.writeString(_pool.toCharPtr(slot->key()));
       write(':');
       slot->data()->accept(*this);
 
@@ -94,6 +96,7 @@ class JsonSerializer {
   void write(const char *s) {
     _formatter.writeRaw(s);
   }
+	MemoryPool &_pool;
 
  private:
   TextFormatter<TWriter> _formatter;

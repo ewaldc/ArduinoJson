@@ -24,21 +24,43 @@ namespace ARDUINOJSON_NAMESPACE {
 
 class MemoryPool {
  public:
-  MemoryPool(char* buf, size_t capa)
-      : _begin(buf),
-        _left(buf),
-        _right(buf ? buf + capa : 0),
-        _end(buf ? buf + capa : 0) {
+	 MemoryPool(char* buf, size_t capa)
+		 : _begin(buf), _end(buf ? buf + capa : 0) {		 
+		clear();
     ARDUINOJSON_ASSERT(isAligned(_begin));
     ARDUINOJSON_ASSERT(isAligned(_right));
     ARDUINOJSON_ASSERT(isAligned(_end));
   }
 
+	inline VariantSlot* toSlot(VariantSlotOffset offset) {
+		return (VariantSlot *)(_end - offset);
+	}
+
+	inline const char *toCharPtr(VariantKey keyOffset) {
+		return (const char *)_begin + keyOffset;
+	}
+
+	inline VariantKey toVariantKey(const char *key) {
+		return (VariantKey)(key - _begin);
+	}
+
   void* buffer() {
     return _begin;
   }
+	
+	const char* left() {
+		return (const char*)_left;
+	}
 
-  // Gets the capacity of the memoryPool in bytes
+	inline VariantSlot* rootSlot() {
+		return (VariantSlot *)_end - 1;
+	}
+
+	inline VariantData* rootVariant() {
+		return rootSlot()->data();
+	}
+
+	// Gets the capacity of the memoryPool in bytes
   size_t capacity() const {
     return size_t(_end - _begin);
   }
@@ -69,22 +91,41 @@ class MemoryPool {
     return s;
   }
 
+	VariantKey allocLinkedKey(char *key) {
+		if (!canAlloc(sizeof(char *)))
+			return 0;
+		char *p = (char *) memcpy(_left, &key, sizeof(char *));
+		checkInvariants();
+		_left -= sizeof(char *);
+		return (VariantKey)(p - _begin);
+	}
+
+	VariantKey allocOwnedKey(char *key, size_t len) {
+		if (!canAlloc(++len))
+			return 0;
+		char *p = (char *) memcpy(_left, key, len);
+		checkInvariants();
+		_left -= len;
+		return (VariantKey)(p - _begin);
+	}
+
   void freezeString(StringSlot& s, size_t newSize) {
     _left -= (s.size - newSize);
     s.size = newSize;
     checkInvariants();
   }
 
-  void reclaimLastString(const char* s) {
+  inline void reclaimLastString(const char* s) {
     _left = const_cast<char*>(s);
   }
 
   void clear() {
-    _left = _begin;
-    _right = _end;
+    _left = _begin + (sizeof(char *) * 2); // placeholders for sharedPool/jsonString, ensures valid string/key offset is never 0 
+		_right = _end - sizeof(VariantSlot);	// placeholder for rootVariant
+		((VariantSlot *)_right)->clear();			// make sure rootVariant slot is cleared
   }
 
-  bool canAlloc(size_t bytes) const {
+  inline bool canAlloc(size_t bytes) const {
     return _left + bytes <= _right;
   }
 
@@ -142,6 +183,7 @@ class MemoryPool {
     _right += offset;
     _end += offset;
   }
+
 
  private:
   StringSlot* allocStringSlot() {

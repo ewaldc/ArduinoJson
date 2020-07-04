@@ -68,18 +68,18 @@ class ArrayConstRef : public ArrayRefBase<const CollectionData>,
   FORCE_INLINE iterator begin() const {
     if (!_data)
       return iterator();
-    return iterator(_data->head());
+    return iterator(_pool, _data->head());
   }
 
   FORCE_INLINE iterator end() const {
     return iterator();
   }
 
-  FORCE_INLINE ArrayConstRef() : base_type(0) {}
-  FORCE_INLINE ArrayConstRef(const CollectionData* data) : base_type(data) {}
+  FORCE_INLINE ArrayConstRef() : base_type(0), _pool(0) {}
+  FORCE_INLINE ArrayConstRef(MemoryPool* pool, const CollectionData* data) : base_type(data), _pool(pool) {}
 
   FORCE_INLINE bool operator==(ArrayConstRef rhs) const {
-    return arrayEquals(_data, rhs._data);
+    return arrayEquals(_data, *_pool, rhs._data, *rhs._pool);
   }
 
   FORCE_INLINE VariantConstRef operator[](size_t index) const {
@@ -87,8 +87,10 @@ class ArrayConstRef : public ArrayRefBase<const CollectionData>,
   }
 
   FORCE_INLINE VariantConstRef getElement(size_t index) const {
-    return VariantConstRef(_data ? _data->getElement(index) : 0);
+    return VariantConstRef(_pool, _data ? _data->getElement(index) : 0);
   }
+ private:
+	MemoryPool* _pool;
 };
 
 class ArrayRef : public ArrayRefBase<CollectionData>,
@@ -109,7 +111,7 @@ class ArrayRef : public ArrayRefBase<CollectionData>,
   }
 
   operator ArrayConstRef() const {
-    return ArrayConstRef(_data);
+    return ArrayConstRef(_pool, _data);
   }
 
   VariantRef addElement() const {
@@ -134,7 +136,7 @@ class ArrayRef : public ArrayRefBase<CollectionData>,
   }
 
   FORCE_INLINE bool operator==(ArrayRef rhs) const {
-    return arrayEquals(_data, rhs._data);
+    return arrayEquals(_data, *_pool, rhs._data, *(rhs._pool));
   }
 
   // Internal use

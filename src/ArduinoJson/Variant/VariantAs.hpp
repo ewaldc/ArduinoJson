@@ -5,7 +5,6 @@
 #pragma once
 
 #include <ArduinoJson/Strings/IsWriteableString.hpp>
-#include <ArduinoJson/Variant/VariantData.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
@@ -53,17 +52,9 @@ struct VariantConstAs<ArrayRef> {
 // ---
 
 template <typename T>
-inline typename enable_if<is_integral<T>::value && !is_same<bool, T>::value,
-                          T>::type
-variantAs(const VariantData* data) {
-  ARDUINOJSON_ASSERT_INTEGER_TYPE_IS_SUPPORTED(T);
-  return data != 0 ? data->asIntegral<T>() : T(0);
-}
-
-template <typename T>
-inline typename enable_if<is_enum<T>::value, T>::type variantAs(
+inline typename enable_if<is_integral<T>::value, T>::type variantAs(
     const VariantData* data) {
-  return data != 0 ? static_cast<T>(data->asIntegral<int>()) : T();
+  return data != 0 ? data->asIntegral<T>() : T(0);
 }
 
 template <typename T>

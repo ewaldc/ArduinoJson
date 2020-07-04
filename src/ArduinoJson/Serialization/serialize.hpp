@@ -5,14 +5,16 @@
 #pragma once
 
 #include <ArduinoJson/Serialization/Writer.hpp>
+#include <ArduinoJson/Memory/MemoryPool.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
 template <template <typename> class TSerializer, typename TSource,
           typename TWriter>
 size_t doSerialize(const TSource &source, TWriter writer) {
-  TSerializer<TWriter> serializer(writer);
-  source.accept(serializer);
+  TSerializer<TWriter> serializer(writer, source.memoryPool());
+	//TSerializer<TWriter> serializer(writer);
+	source.accept(serializer);
   return serializer.bytesWritten();
 }
 

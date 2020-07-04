@@ -21,8 +21,8 @@ struct ParsedNumber {
   ParsedNumber(TUInt value, bool is_negative)
       : uintValue(value),
         floatValue(TFloat(value)),
-        _type(uint8_t(is_negative ? VALUE_IS_NEGATIVE_INTEGER
-                                  : VALUE_IS_POSITIVE_INTEGER)) {}
+        _type(uint8_t(is_negative ? VALUE_IS_NEGATIVE_INTEGER : VALUE_IS_POSITIVE_INTEGER)) {}
+				//_type(uint8_t(VALUE_IS_INTEGER)) {}
   ParsedNumber(TFloat value) : floatValue(value), _type(VALUE_IS_FLOAT) {}
 
   template <typename T>
@@ -87,7 +87,8 @@ inline ParsedNumber<TFloat, TUInt> parseNumber(const char *s) {
 
   mantissa_t mantissa = 0;
   exponent_t exponent_offset = 0;
-  const mantissa_t maxUint = TUInt(-1);
+  //const mantissa_t maxUint = TUInt(-1);
+	const mantissa_t maxUint = std::numeric_limits<UInt>::max();
 
   while (isdigit(*s)) {
     uint8_t digit = uint8_t(*s - '0');

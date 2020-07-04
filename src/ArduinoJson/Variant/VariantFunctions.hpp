@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <ArduinoJson/Polyfills/attributes.hpp>
 #include <ArduinoJson/Variant/VariantData.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
@@ -40,7 +39,13 @@ inline bool variantCopyFrom(VariantData *dst, const VariantData *src,
   return dst->copyFrom(*src, pool);
 }
 
-inline int variantCompare(const VariantData *a, const VariantData *b);
+inline bool variantEquals(const VariantData *a, MemoryPool &aPool, const VariantData *b, MemoryPool &bPool) {
+  if (a == b)
+    return true;
+  if (!a || !b)
+    return false;
+  return a->equals(aPool, *b, bPool);
+}
 
 inline bool variantIsArray(const VariantData *var) {
   return var && var->isArray();
@@ -99,6 +104,14 @@ inline bool variantSetOwnedRaw(VariantData *var, SerializedValue<T> value,
   return var != 0 && var->setOwnedRaw(value, pool);
 }
 
+template <typename T>
+inline bool variantSetSignedInteger(VariantData *var, T value) {
+  if (!var)
+    return false;
+  var->setSignedInteger(value);
+  return true;
+}
+
 inline bool variantSetLinkedString(VariantData *var, const char *value) {
   if (!var)
     return false;
@@ -124,12 +137,10 @@ inline bool variantSetOwnedString(VariantData *var, T value, MemoryPool *pool) {
   return var != 0 && var->setOwnedString(value, pool);
 }
 
-template <typename T>
-inline bool variantSetInteger(VariantData *var, T value) {
-  ARDUINOJSON_ASSERT_INTEGER_TYPE_IS_SUPPORTED(T);
+inline bool variantSetUnsignedInteger(VariantData *var, UInt value) {
   if (!var)
     return false;
-  var->setInteger(value);
+  var->setUnsignedInteger(value);
   return true;
 }
 

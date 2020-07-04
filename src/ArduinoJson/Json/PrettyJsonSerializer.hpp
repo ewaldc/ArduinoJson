@@ -16,7 +16,7 @@ class PrettyJsonSerializer : public JsonSerializer<TWriter> {
   typedef JsonSerializer<TWriter> base;
 
  public:
-  PrettyJsonSerializer(TWriter &writer) : base(writer), _nesting(0) {}
+  PrettyJsonSerializer(TWriter &writer, MemoryPool &pool) : base(writer, pool), _nesting(0) {}
 
   void visitArray(const CollectionData &array) {
     VariantSlot *slot = array.head();
@@ -46,7 +46,7 @@ class PrettyJsonSerializer : public JsonSerializer<TWriter> {
     _nesting++;
     while (slot != 0) {
       indent();
-      base::visitString(slot->key());
+      base::visitString(base::_pool.toCharPtr(slot->key()));
       base::write(": ");
       slot->data()->accept(*this);
 

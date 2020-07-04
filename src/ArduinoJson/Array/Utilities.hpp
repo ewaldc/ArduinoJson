@@ -5,7 +5,6 @@
 #pragma once
 
 #include <ArduinoJson/Array/ArrayRef.hpp>
-#include <ArduinoJson/Document/JsonDocument.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
@@ -13,12 +12,6 @@ namespace ARDUINOJSON_NAMESPACE {
 template <typename T, size_t N>
 inline bool copyArray(T (&src)[N], ArrayRef dst) {
   return copyArray(src, N, dst);
-}
-
-// Copy a 1D array to a JsonDocument
-template <typename T, size_t N>
-inline bool copyArray(T (&src)[N], JsonDocument& dst) {
-  return copyArray(src, dst.to<ArrayRef>());
 }
 
 // Copy a 1D array to a JsonArray
@@ -29,12 +22,6 @@ inline bool copyArray(T* src, size_t len, ArrayRef dst) {
     ok &= dst.add(src[i]);
   }
   return ok;
-}
-
-// Copy a 1D array to a JsonDocument
-template <typename T>
-inline bool copyArray(T* src, size_t len, JsonDocument& dst) {
-  return copyArray(src, len, dst.to<ArrayRef>());
 }
 
 // Copy a 2D array to a JsonArray
@@ -50,22 +37,10 @@ inline bool copyArray(T (&src)[N1][N2], ArrayRef dst) {
   return ok;
 }
 
-// Copy a 2D array to a JsonDocument
-template <typename T, size_t N1, size_t N2>
-inline bool copyArray(T (&src)[N1][N2], JsonDocument& dst) {
-  return copyArray(src, dst.to<ArrayRef>());
-}
-
 // Copy a JsonArray to a 1D array
 template <typename T, size_t N>
 inline size_t copyArray(ArrayConstRef src, T (&dst)[N]) {
   return copyArray(src, dst, N);
-}
-
-// Copy a JsonDocument to a 1D array
-template <typename T, size_t N>
-inline size_t copyArray(const JsonDocument& src, T (&dst)[N]) {
-  return copyArray(src.as<ArrayConstRef>(), dst, N);
 }
 
 // Copy a JsonArray to a 1D array
@@ -86,12 +61,6 @@ inline void copyArray(ArrayConstRef src, T (&dst)[N1][N2]) {
        ++it) {
     copyArray(it->as<ArrayConstRef>(), dst[i++]);
   }
-}
-
-// Copy a JsonDocument to a 2D array
-template <typename T, size_t N1, size_t N2>
-inline void copyArray(const JsonDocument& src, T (&dst)[N1][N2]) {
-  copyArray(src.as<ArrayConstRef>(), dst);
 }
 
 }  // namespace ARDUINOJSON_NAMESPACE

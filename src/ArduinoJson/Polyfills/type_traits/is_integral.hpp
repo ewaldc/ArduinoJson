@@ -25,7 +25,9 @@ struct is_integral {
       is_same<T, signed __int64>::value ||
       is_same<T, unsigned __int64>::value ||
 #endif
-      is_same<T, char>::value || is_same<T, bool>::value;
+      is_same<T, char>::value;
+
+  // CAUTION: differs from std::is_integral as it doesn't include bool
 };
 
 template <typename T>

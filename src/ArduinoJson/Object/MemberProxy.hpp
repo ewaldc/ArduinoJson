@@ -5,11 +5,8 @@
 #pragma once
 
 #include <ArduinoJson/Configuration.hpp>
+#include <ArduinoJson/Operators/VariantOperators.hpp>
 #include <ArduinoJson/Polyfills/type_traits.hpp>
-#include <ArduinoJson/Variant/VariantOperators.hpp>
-#include <ArduinoJson/Variant/VariantRef.hpp>
-#include <ArduinoJson/Variant/VariantShortcuts.hpp>
-#include <ArduinoJson/Variant/VariantTo.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -20,7 +17,6 @@ namespace ARDUINOJSON_NAMESPACE {
 
 template <typename TObject, typename TStringRef>
 class MemberProxy : public VariantOperators<MemberProxy<TObject, TStringRef> >,
-                    public VariantShortcuts<MemberProxy<TObject, TStringRef> >,
                     public Visitable {
   typedef MemberProxy<TObject, TStringRef> this_type;
 
@@ -54,6 +50,14 @@ class MemberProxy : public VariantOperators<MemberProxy<TObject, TStringRef> >,
   FORCE_INLINE this_type &operator=(TChar *src) {
     getOrAddUpstreamMember().set(src);
     return *this;
+  }
+
+  FORCE_INLINE bool operator==(VariantConstRef rhs) const {
+    return static_cast<VariantConstRef>(getUpstreamMember()) == rhs;
+  }
+
+  FORCE_INLINE bool operator!=(VariantConstRef rhs) const {
+    return static_cast<VariantConstRef>(getUpstreamMember()) != rhs;
   }
 
   FORCE_INLINE void clear() const {
@@ -124,6 +128,9 @@ class MemberProxy : public VariantOperators<MemberProxy<TObject, TStringRef> >,
   void accept(Visitor &visitor) const {
     return getUpstreamMember().accept(visitor);
   }
+	FORCE_INLINE MemoryPool& memoryPool() {
+		return getUpstreamMember().memoryPool();
+	}
 
   FORCE_INLINE VariantRef addElement() const {
     return getOrAddUpstreamMember().addElement();

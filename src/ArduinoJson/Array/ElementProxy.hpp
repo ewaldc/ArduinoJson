@@ -5,8 +5,7 @@
 #pragma once
 
 #include <ArduinoJson/Configuration.hpp>
-#include <ArduinoJson/Variant/VariantOperators.hpp>
-#include <ArduinoJson/Variant/VariantShortcuts.hpp>
+#include <ArduinoJson/Operators/VariantOperators.hpp>
 #include <ArduinoJson/Variant/VariantTo.hpp>
 
 #ifdef _MSC_VER
@@ -18,7 +17,6 @@ namespace ARDUINOJSON_NAMESPACE {
 
 template <typename TArray>
 class ElementProxy : public VariantOperators<ElementProxy<TArray> >,
-                     public VariantShortcuts<ElementProxy<TArray> >,
                      public Visitable {
   typedef ElementProxy<TArray> this_type;
 
@@ -51,6 +49,14 @@ class ElementProxy : public VariantOperators<ElementProxy<TArray> >,
   FORCE_INLINE this_type& operator=(T* src) {
     getOrAddUpstreamElement().set(src);
     return *this;
+  }
+
+  FORCE_INLINE bool operator==(VariantConstRef rhs) const {
+    return static_cast<VariantConstRef>(getUpstreamElement()) == rhs;
+  }
+
+  FORCE_INLINE bool operator!=(VariantConstRef rhs) const {
+    return static_cast<VariantConstRef>(getUpstreamElement()) != rhs;
   }
 
   FORCE_INLINE void clear() const {
@@ -102,6 +108,10 @@ class ElementProxy : public VariantOperators<ElementProxy<TArray> >,
   void accept(Visitor& visitor) const {
     return getUpstreamElement().accept(visitor);
   }
+
+	FORCE_INLINE MemoryPool& memoryPool() {
+		return getUpstreamElement().MemoryPool();
+	}
 
   FORCE_INLINE size_t size() const {
     return getUpstreamElement().size();

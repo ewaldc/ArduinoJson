@@ -16,12 +16,12 @@ void objectAccept(const CollectionData *obj, Visitor &visitor) {
     visitor.visitNull();
 }
 
-inline bool objectEquals(const CollectionData *lhs, const CollectionData *rhs) {
+inline bool objectEquals(const CollectionData *lhs, MemoryPool &lhsPool, const CollectionData *rhs, MemoryPool &rhsPool) {
   if (lhs == rhs)
     return true;
   if (!lhs || !rhs)
     return false;
-  return lhs->equalsObject(*rhs);
+  return lhs->equalsObject(lhsPool, *rhs, rhsPool);
 }
 
 template <typename TAdaptedString>

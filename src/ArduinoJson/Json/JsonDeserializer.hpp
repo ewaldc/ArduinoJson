@@ -52,6 +52,36 @@ class JsonDeserializer {
  private:
   JsonDeserializer &operator=(const JsonDeserializer &);  // non-copiable
 
+	const char *findKey(VariantSlot *v, const char* key) {
+		VariantData& vd = reinterpret_cast<VariantData &>(v->_content);
+		if (vd.isCollection())
+			v = v->_content.asCollection.head();
+		VariantSlot* s = v;
+		for (VariantSlot* s = v; s; s = s->next()) {
+			VariantData& vd = reinterpret_cast<VariantData &>(s->_content);
+			if (!safe_strcmp(s->key(), key))
+				return s->key();
+			if (vd.isCollection())
+				return findKey(s, key);
+		}
+	}
+	const char *findString(const char* begin, const char* str, bool key = true) {
+		static int count = 0;
+//		if (!key && count++ > 0) return nullptr;
+		if (!key || count++ >=10) return nullptr;
+		const char *p = begin, *q = str;
+		const size_t len = strlen(str) + 1;
+		while (p < str) {
+			size_t l = len;
+			while (l && *p++ == *q++) l--;
+			if (l == 0)
+				return p - len;
+			q = str;	
+			while (*p++);
+		}
+		return nullptr; // we reached the new string, so there is no duplicate
+	}
+
   char current() {
     return _latch.current();
   }
@@ -240,14 +270,20 @@ class JsonDeserializer {
       TFilter memberFilter = filter[key.value];
 
       if (memberFilter.allow()) {
-        VariantData *variant = object.getMember(adaptString(key.value));
+        VariantData *variant = object.getMember(adaptString(key.value), _pool);
         if (!variant) {
           // Allocate slot in object
           VariantSlot *slot = object.addSlot(_pool);
           if (!slot)
             return DeserializationError::NoMemory;
 
-          slot->setOwnedKey(make_not_null(key.value));
+					//const char *lookupString = findKey(_pool->rootSlot(), key.value);
+					//const char *lookupString = findString((const char *)_pool->buffer(), key.value);
+					//if (lookupString) {
+						//_pool->reclaimLastString(key.value);
+						//key.value = lookupString;
+					//}
+					slot->setOwnedKey(make_not_null(_pool->toVariantKey(key.value)));
 
           variant = slot->data();
         }
@@ -344,6 +380,13 @@ class JsonDeserializer {
     StringOrError result = parseQuotedString();
     if (result.err)
       return result.err;
+		/*
+		const char *lookupString = findString((const char *)_pool->buffer(), result.value, false);
+		if (lookupString) {
+			_pool->reclaimLastString(result.value);
+			result.value = lookupString;
+		}
+		*/
     variant.setOwnedString(make_not_null(result.value));
     return DeserializationError::Ok;
   }
@@ -473,14 +516,19 @@ class JsonDeserializer {
     ParsedNumber<Float, UInt> num = parseNumber<Float, UInt>(buffer);
 
     switch (num.type()) {
-      case VALUE_IS_NEGATIVE_INTEGER:
+			case VALUE_IS_INTEGER:
+				result.setInteger(num.uintValue);
+				return DeserializationError::Ok;
+
+/*
+			case VALUE_IS_NEGATIVE_INTEGER:
         result.setNegativeInteger(num.uintValue);
         return DeserializationError::Ok;
 
       case VALUE_IS_POSITIVE_INTEGER:
         result.setPositiveInteger(num.uintValue);
         return DeserializationError::Ok;
-
+*/
       case VALUE_IS_FLOAT:
         result.setFloat(num.floatValue);
         return DeserializationError::Ok;

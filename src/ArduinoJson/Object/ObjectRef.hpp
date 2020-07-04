@@ -27,7 +27,11 @@ class ObjectRefBase {
     objectAccept(_data, visitor);
   }
 
-  FORCE_INLINE bool isNull() const {
+	FORCE_INLINE MemoryPool& memoryPool() {
+		return *_pool;
+	}
+	
+	FORCE_INLINE bool isNull() const {
     return _data == 0;
   }
 
@@ -48,8 +52,9 @@ class ObjectRefBase {
   }
 
  protected:
-  ObjectRefBase(TData* data) : _data(data) {}
+  ObjectRefBase(TData* data, MemoryPool* pool) : _data(data), _pool(pool) {}
   TData* _data;
+	MemoryPool* _pool;
 };
 
 class ObjectConstRef : public ObjectRefBase<const CollectionData>,
@@ -60,8 +65,8 @@ class ObjectConstRef : public ObjectRefBase<const CollectionData>,
  public:
   typedef ObjectConstIterator iterator;
 
-  ObjectConstRef() : base_type(0) {}
-  ObjectConstRef(const CollectionData* data) : base_type(data) {}
+  ObjectConstRef() : base_type(0, nullptr) {}
+  ObjectConstRef(MemoryPool* pool, const CollectionData* data) : base_type(data, pool) {}
 
   FORCE_INLINE iterator begin() const {
     if (!_data)
@@ -123,14 +128,15 @@ class ObjectConstRef : public ObjectRefBase<const CollectionData>,
   }
 
   FORCE_INLINE bool operator==(ObjectConstRef rhs) const {
-    return objectEquals(_data, rhs._data);
+    return objectEquals(_data, *_pool, rhs._data, *(rhs._pool));
   }
 
  private:
-  template <typename TAdaptedString>
+
+	template <typename TAdaptedString>
   FORCE_INLINE VariantConstRef get_impl(TAdaptedString key) const {
     return VariantConstRef(objectGetMember(_data, key));
-  }
+	}
 };
 
 class ObjectRef : public ObjectRefBase<CollectionData>,
@@ -141,9 +147,9 @@ class ObjectRef : public ObjectRefBase<CollectionData>,
  public:
   typedef ObjectIterator iterator;
 
-  FORCE_INLINE ObjectRef() : base_type(0), _pool(0) {}
-  FORCE_INLINE ObjectRef(MemoryPool* buf, CollectionData* data)
-      : base_type(data), _pool(buf) {}
+  FORCE_INLINE ObjectRef() : base_type(0, nullptr) {}
+  FORCE_INLINE ObjectRef(MemoryPool* pool, CollectionData* data)
+      : base_type(data, pool) {}
 
   operator VariantRef() const {
     void* data = _data;  // prevent warning cast-align
@@ -151,7 +157,7 @@ class ObjectRef : public ObjectRefBase<CollectionData>,
   }
 
   operator ObjectConstRef() const {
-    return ObjectConstRef(_data);
+    return ObjectConstRef(_pool, _data);
   }
 
   FORCE_INLINE iterator begin() const {
@@ -209,7 +215,7 @@ class ObjectRef : public ObjectRefBase<CollectionData>,
   }
 
   FORCE_INLINE bool operator==(ObjectRef rhs) const {
-    return objectEquals(_data, rhs._data);
+    return objectEquals(_data, *_pool, rhs._data, *(rhs._pool));
   }
 
   FORCE_INLINE void remove(iterator it) const {
@@ -234,6 +240,5 @@ class ObjectRef : public ObjectRefBase<CollectionData>,
   }
 
  private:
-  MemoryPool* _pool;
 };
 }  // namespace ARDUINOJSON_NAMESPACE

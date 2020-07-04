@@ -11,7 +11,7 @@ namespace ARDUINOJSON_NAMESPACE {
 template <template <typename> class TSerializer, typename TSource>
 size_t measure(const TSource &source) {
   DummyWriter dp;
-  TSerializer<DummyWriter> serializer(dp);
+  TSerializer<DummyWriter> serializer(dp, source.memoryPool());
   source.accept(serializer);
   return serializer.bytesWritten();
 }

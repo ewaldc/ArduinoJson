@@ -118,5 +118,5 @@ class ArrayConstRefIterator {
  private:
 	 MemoryPool *_pool;
 	 const VariantSlot *_slot;
-};
+	};
 }  // namespace ARDUINOJSON_NAMESPACE

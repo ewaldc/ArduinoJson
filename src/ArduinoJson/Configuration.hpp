@@ -4,6 +4,12 @@
 
 #pragma once
 
+#if defined(_MSC_VER)
+#define ARDUINOJSON_HAS_INT64 1
+#else
+#define ARDUINOJSON_HAS_INT64 0
+#endif
+
 #if __cplusplus >= 201103L
 #define ARDUINOJSON_HAS_LONG_LONG 1
 #define ARDUINOJSON_HAS_NULLPTR 1
@@ -12,12 +18,6 @@
 #define ARDUINOJSON_HAS_LONG_LONG 0
 #define ARDUINOJSON_HAS_NULLPTR 0
 #define ARDUINOJSON_HAS_RVALUE_REFERENCES 0
-#endif
-
-#if defined(_MSC_VER) && !ARDUINOJSON_HAS_LONG_LONG
-#define ARDUINOJSON_HAS_INT64 1
-#else
-#define ARDUINOJSON_HAS_INT64 0
 #endif
 
 // Small or big machine?

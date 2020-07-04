@@ -32,7 +32,7 @@ class JsonDocument : public Visitable {
 
   void clear() {
     _pool.clear();
-    _data.setNull();
+    _data->setNull();
   }
 
   template <typename T>
@@ -49,7 +49,7 @@ class JsonDocument : public Visitable {
   }
 
   size_t nesting() const {
-    return _data.nesting();
+    return _data->nesting();
   }
 
   size_t capacity() const {
@@ -57,7 +57,7 @@ class JsonDocument : public Visitable {
   }
 
   size_t size() const {
-    return _data.size();
+    return _data->size();
   }
 
   bool set(const JsonDocument& src) {
@@ -81,8 +81,12 @@ class JsonDocument : public Visitable {
     return _pool;
   }
 
+	MemoryPool& memoryPool() const {
+		return (MemoryPool &)_pool;
+	}
+
   VariantData& data() {
-    return _data;
+    return *_data;
   }
 
   ArrayRef createNestedArray() {
@@ -185,15 +189,15 @@ class JsonDocument : public Visitable {
   }
 
   FORCE_INLINE VariantRef getElement(size_t index) {
-    return VariantRef(&_pool, _data.getElement(index));
+    return VariantRef(&_pool, _data->getElement(index));
   }
 
   FORCE_INLINE VariantConstRef getElement(size_t index) const {
-    return VariantConstRef(_data.getElement(index));
+    return VariantConstRef(&(_pool), _data->getElement(index));
   }
 
   FORCE_INLINE VariantRef getOrAddElement(size_t index) {
-    return VariantRef(&_pool, _data.getOrAddElement(index, &_pool));
+    return VariantRef(&_pool, _data->getOrAddElement(index, &_pool));
   }
 
   // JsonVariantConst getMember(char*) const
@@ -201,7 +205,7 @@ class JsonDocument : public Visitable {
   // JsonVariantConst getMember(const __FlashStringHelper*) const
   template <typename TChar>
   FORCE_INLINE VariantConstRef getMember(TChar* key) const {
-    return VariantConstRef(_data.getMember(adaptString(key)));
+    return VariantConstRef(_data->getMember(adaptString(key)));
   }
 
   // JsonVariantConst getMember(const std::string&) const
@@ -210,7 +214,7 @@ class JsonDocument : public Visitable {
   FORCE_INLINE
       typename enable_if<IsString<TString>::value, VariantConstRef>::type
       getMember(const TString& key) const {
-    return VariantConstRef(_data.getMember(adaptString(key)));
+    return VariantConstRef(_data->getMember(adaptString(key)));
   }
 
   // JsonVariant getMember(char*)
@@ -218,7 +222,7 @@ class JsonDocument : public Visitable {
   // JsonVariant getMember(const __FlashStringHelper*)
   template <typename TChar>
   FORCE_INLINE VariantRef getMember(TChar* key) {
-    return VariantRef(&_pool, _data.getMember(adaptString(key)));
+    return VariantRef(&_pool, _data->getMember(adaptString(key)));
   }
 
   // JsonVariant getMember(const std::string&)
@@ -226,7 +230,7 @@ class JsonDocument : public Visitable {
   template <typename TString>
   FORCE_INLINE typename enable_if<IsString<TString>::value, VariantRef>::type
   getMember(const TString& key) {
-    return VariantRef(&_pool, _data.getMember(adaptString(key)));
+    return VariantRef(&_pool, _data->getMember(adaptString(key)));
   }
 
   // getOrAddMember(char*)
@@ -234,18 +238,18 @@ class JsonDocument : public Visitable {
   // getOrAddMember(const __FlashStringHelper*)
   template <typename TChar>
   FORCE_INLINE VariantRef getOrAddMember(TChar* key) {
-    return VariantRef(&_pool, _data.getOrAddMember(adaptString(key), &_pool));
+    return VariantRef(&_pool, _data->getOrAddMember(adaptString(key), &_pool));
   }
 
   // getOrAddMember(const std::string&)
   // getOrAddMember(const String&)
   template <typename TString>
   FORCE_INLINE VariantRef getOrAddMember(const TString& key) {
-    return VariantRef(&_pool, _data.getOrAddMember(adaptString(key), &_pool));
+    return VariantRef(&_pool, _data->getOrAddMember(adaptString(key), &_pool));
   }
 
   FORCE_INLINE VariantRef addElement() {
-    return VariantRef(&_pool, _data.addElement(&_pool));
+    return VariantRef(&_pool, _data->addElement(&_pool));
   }
 
   template <typename TValue>
@@ -262,7 +266,7 @@ class JsonDocument : public Visitable {
   }
 
   FORCE_INLINE void remove(size_t index) {
-    _data.remove(index);
+    _data->remove(index);
   }
   // remove(char*)
   // remove(const char*)
@@ -270,18 +274,18 @@ class JsonDocument : public Visitable {
   template <typename TChar>
   FORCE_INLINE typename enable_if<IsString<TChar*>::value>::type remove(
       TChar* key) {
-    _data.remove(adaptString(key));
+    _data->remove(adaptString(key));
   }
   // remove(const std::string&)
   // remove(const String&)
   template <typename TString>
   FORCE_INLINE typename enable_if<IsString<TString>::value>::type remove(
       const TString& key) {
-    _data.remove(adaptString(key));
+    _data->remove(adaptString(key));
   }
 
   FORCE_INLINE operator VariantConstRef() const {
-    return VariantConstRef(&_data);
+    return VariantConstRef(&_pool, _data);
   }
 
   bool operator==(VariantConstRef rhs) const {
@@ -293,16 +297,15 @@ class JsonDocument : public Visitable {
   }
 
  protected:
-  JsonDocument() : _pool(0, 0) {
-    _data.setNull();
+  JsonDocument() : _pool(0, 0), _data(nullptr) {
   }
 
-  JsonDocument(MemoryPool pool) : _pool(pool) {
-    _data.setNull();
+  JsonDocument(MemoryPool pool) : _pool(pool), _data(_pool.rootVariant()) {
+		_data->setNull();
   }
 
-  JsonDocument(char* buf, size_t capa) : _pool(buf, capa) {
-    _data.setNull();
+  JsonDocument(char* buf, size_t capa) : _pool(buf, capa), _data(_pool.rootVariant()) {
+    _data->setNull();
   }
 
   void replacePool(MemoryPool pool) {
@@ -310,15 +313,15 @@ class JsonDocument : public Visitable {
   }
 
   VariantRef getVariant() {
-    return VariantRef(&_pool, &_data);
+    return VariantRef(&_pool, _data);
   }
 
   VariantConstRef getVariant() const {
-    return VariantConstRef(&_data);
+    return VariantConstRef(&_pool, _data);
   }
 
   MemoryPool _pool;
-  VariantData _data;
+  VariantData *_data;
 
  private:
   JsonDocument(const JsonDocument&);

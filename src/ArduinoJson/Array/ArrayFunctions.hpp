@@ -20,11 +20,11 @@ inline void arrayAccept(const CollectionData *arr, Visitor &visitor) {
     visitor.visitNull();
 }
 
-inline bool arrayEquals(const CollectionData *lhs, const CollectionData *rhs) {
+inline bool arrayEquals(const CollectionData *lhs, MemoryPool &lhsPool, const CollectionData *rhs, MemoryPool &rhsPool) {
   if (lhs == rhs)
     return true;
   if (!lhs || !rhs)
     return false;
-  return lhs->equalsArray(*rhs);
+  return lhs->equalsArray(lhsPool, *rhs, rhsPool);
 }
 }  // namespace ARDUINOJSON_NAMESPACE

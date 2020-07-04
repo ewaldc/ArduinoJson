@@ -27,21 +27,23 @@ inline bool slotSetKey(VariantSlot* var, TAdaptedString key, MemoryPool* pool,
 }
 
 template <typename TAdaptedString>
-inline bool slotSetKey(VariantSlot* var, TAdaptedString key, MemoryPool*,
+inline bool slotSetKey(VariantSlot* var, TAdaptedString key, MemoryPool* pool,
                        storage_policy::store_by_address) {
   ARDUINOJSON_ASSERT(var);
-  var->setLinkedKey(make_not_null(key.data()));
+	VariantKey keyLink = pool->allocLinkedKey((char *)key.data());
+	var->setLinkedKey(make_not_null(keyLink));
   return true;
 }
 
 template <typename TAdaptedString>
 inline bool slotSetKey(VariantSlot* var, TAdaptedString key, MemoryPool* pool,
                        storage_policy::store_by_copy) {
-  const char* dup = key.save(pool);
-  if (!dup)
+  //const char* dup = key.save(pool);
+	VariantKey keyDup = pool->allocLinkedKey((char *)key.data());
+  if (!keyDup)
     return false;
   ARDUINOJSON_ASSERT(var);
-  var->setOwnedKey(make_not_null(dup));
+  var->setOwnedKey(make_not_null(keyDup));
   return true;
 }
 

@@ -9,6 +9,12 @@
 
 #include <stddef.h>  // size_t
 
+#if ARDUINOJSON_EMBEDDED_MODE
+typedef int16_t VariantSlotOffset;
+#else
+typedef int32_t VariantSlotOffset;
+#endif
+
 namespace ARDUINOJSON_NAMESPACE {
 
 class MemoryPool;
@@ -16,8 +22,15 @@ class VariantData;
 class VariantSlot;
 
 class CollectionData {
-  VariantSlot *_head;
-  VariantSlot *_tail;
+	union {
+		VariantSlot *_linkedHead;
+		struct {
+			VariantSlotOffset _head;
+			VariantSlotOffset _tail;
+		};
+	};
+  //VariantSlot *_tail;
+
 
  public:
   // Must be a POD!
@@ -28,6 +41,12 @@ class CollectionData {
 
   // Array only
 
+	VariantSlot *head() const;
+	VariantSlot *linkedHead() const;
+	VariantSlot *tail() const ;
+
+	//VariantSlotOffset offset(VariantSlot *slot);
+
   VariantData *addElement(MemoryPool *pool);
 
   VariantData *getElement(size_t index) const;
@@ -36,7 +55,7 @@ class CollectionData {
 
   void removeElement(size_t index);
 
-  bool equalsArray(const CollectionData &other) const;
+  bool equalsArray(MemoryPool &pool, const CollectionData &other, MemoryPool &otherPool) const;
 
   // Object only
 
@@ -45,6 +64,9 @@ class CollectionData {
 
   template <typename TAdaptedString>
   VariantData *getMember(TAdaptedString key) const;
+
+	template <typename TAdaptedString>
+	VariantData *getMember(TAdaptedString key, MemoryPool *pool) const;
 
   template <typename TAdaptedString>
   VariantData *getOrAddMember(TAdaptedString key, MemoryPool *pool);
@@ -57,12 +79,12 @@ class CollectionData {
   template <typename TAdaptedString>
   bool containsKey(const TAdaptedString &key) const;
 
-  bool equalsObject(const CollectionData &other) const;
+  bool equalsObject(MemoryPool &pool, const CollectionData &other, MemoryPool &otherPool) const;
 
   // Generic
 
   void clear();
-  size_t memoryUsage() const;
+  size_t memoryUsage(MemoryPool &pool) const;
   size_t nesting() const;
   size_t size() const;
 
@@ -71,17 +93,16 @@ class CollectionData {
 
   bool copyFrom(const CollectionData &src, MemoryPool *pool);
 
-  VariantSlot *head() const {
-    return _head;
-  }
-
   void movePointers(ptrdiff_t stringDistance, ptrdiff_t variantDistance);
 
  private:
   VariantSlot *getSlot(size_t index) const;
 
   template <typename TAdaptedString>
-  VariantSlot *getSlot(TAdaptedString key) const;
+  VariantSlot *getSlot(TAdaptedString key, MemoryPool *pool) const;
+
+	template <typename TAdaptedString>
+	VariantSlot *getSlot(TAdaptedString key) const;
 
   VariantSlot *getPreviousSlot(VariantSlot *) const;
 };

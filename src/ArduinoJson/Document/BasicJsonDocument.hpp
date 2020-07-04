@@ -115,7 +115,7 @@ class BasicJsonDocument : AllocatorOwner<TAllocator>, public JsonDocument {
         static_cast<char*>(new_ptr) - static_cast<char*>(old_ptr);
 
     _pool.movePointers(ptr_offset);
-    _data.movePointers(ptr_offset, ptr_offset - bytes_reclaimed);
+    _data->movePointers(ptr_offset, ptr_offset - bytes_reclaimed);
   }
 
   bool garbageCollect() {
@@ -156,7 +156,7 @@ class BasicJsonDocument : AllocatorOwner<TAllocator>, public JsonDocument {
     freePool();
     _data = src._data;
     _pool = src._pool;
-    src._data.setNull();
+    src._data->setNull();
     src._pool = MemoryPool(0, 0);
   }
 };

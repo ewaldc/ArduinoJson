@@ -134,6 +134,7 @@ class VariantRefBase {
 // - a char, short, int or a long (signed or unsigned)
 // - a string (const char*)
 // - a reference to a ArrayRef or ObjectRef
+
 class VariantRef : public VariantRefBase<VariantData>,
                    public VariantOperators<VariantRef>,
                    public Visitable {
@@ -260,10 +261,6 @@ class VariantRef : public VariantRefBase<VariantData>,
   void accept(Visitor &visitor) const {
     variantAccept(_data, visitor);
   }
-
-	FORCE_INLINE MemoryPool& memoryPool() {
-		return *_pool;
-	}
 
   FORCE_INLINE bool operator==(VariantRef lhs) const {
     return variantEquals(_data, *_pool, lhs._data, *lhs._pool);

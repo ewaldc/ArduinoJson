@@ -34,9 +34,8 @@ inline T VariantData::asIntegral() const {
 
 inline bool VariantData::asBoolean() const {
   switch (type()) {
-    case VALUE_IS_POSITIVE_INTEGER:
     case VALUE_IS_BOOLEAN:
-    case VALUE_IS_NEGATIVE_INTEGER:
+    case VALUE_IS_INTEGER:
       return _content.asInteger != 0;
     case VALUE_IS_FLOAT:
       return _content.asFloat != 0;
@@ -51,11 +50,11 @@ inline bool VariantData::asBoolean() const {
 template <typename T>
 inline T VariantData::asFloat() const {
   switch (type()) {
-    case VALUE_IS_POSITIVE_INTEGER:
+    case VALUE_IS_INTEGER:
     case VALUE_IS_BOOLEAN:
       return static_cast<T>(_content.asInteger);
-    case VALUE_IS_NEGATIVE_INTEGER:
-      return -static_cast<T>(_content.asInteger);
+    //case VALUE_IS_NEGATIVE_INTEGER:
+    //  return -static_cast<T>(_content.asInteger);
     case VALUE_IS_LINKED_STRING:
     case VALUE_IS_OWNED_STRING:
       return parseFloat<T>(_content.asString);
@@ -103,7 +102,7 @@ VariantRef::to() const {
 }
 
 inline VariantConstRef VariantConstRef::getElement(size_t index) const {
-  return ArrayConstRef(_data != 0 ? _data->asArray() : 0)[index];
+  return ArrayConstRef(_pool, _data != 0 ? _data->asArray() : 0)[index];
 }
 
 inline VariantRef VariantRef::addElement() const {

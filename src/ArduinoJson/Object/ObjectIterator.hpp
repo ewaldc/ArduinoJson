@@ -68,7 +68,7 @@ class ObjectIterator {
 
 class PairConstPtr {
  public:
-  PairConstPtr(const VariantSlot *slot) : _pair(slot) {}
+  PairConstPtr(MemoryPool *pool, const VariantSlot *slot) : _pair(pool, slot) {}
 
   const PairConst *operator->() const {
     return &_pair;
@@ -89,10 +89,10 @@ class ObjectConstIterator {
   explicit ObjectConstIterator(const VariantSlot *slot) : _slot(slot) {}
 
   PairConst operator*() const {
-    return PairConst(_slot);
+    return PairConst(_pool, _slot);
   }
   PairConstPtr operator->() {
-    return PairConstPtr(_slot);
+    return PairConstPtr(_pool, _slot);
   }
 
   bool operator==(const ObjectConstIterator &other) const {
@@ -118,6 +118,7 @@ class ObjectConstIterator {
   }
 
  private:
+	MemoryPool *_pool;
   const VariantSlot *_slot;
 };
 }  // namespace ARDUINOJSON_NAMESPACE

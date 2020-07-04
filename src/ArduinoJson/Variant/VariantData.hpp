@@ -39,10 +39,12 @@ class VariantData {
       case VALUE_IS_FLOAT:
         return visitor.visitFloat(_content.asFloat);
 
-      case VALUE_IS_ARRAY:
+			case VALUE_IS_OWNED_ARRAY:
+			case VALUE_IS_LINKED_ARRAY:
         return visitor.visitArray(_content.asCollection);
 
-      case VALUE_IS_OBJECT:
+			case VALUE_IS_OWNED_OBJECT:
+			case VALUE_IS_LINKED_OBJECT:
         return visitor.visitObject(_content.asCollection);
 
       case VALUE_IS_LINKED_STRING:
@@ -53,11 +55,15 @@ class VariantData {
       case VALUE_IS_LINKED_RAW:
         return visitor.visitRawJson(_content.asRaw.data, _content.asRaw.size);
 
-      case VALUE_IS_NEGATIVE_INTEGER:
+      /*case VALUE_IS_NEGATIVE_INTEGER:
         return visitor.visitNegativeInteger(_content.asInteger);
 
       case VALUE_IS_POSITIVE_INTEGER:
         return visitor.visitPositiveInteger(_content.asInteger);
+			*/
+			case VALUE_IS_INTEGER:
+			  return visitor.visitPositiveInteger(_content.asInteger);
+				//return visitor.visitInteger(_content.asInteger);
 
       case VALUE_IS_BOOLEAN:
         return visitor.visitBoolean(_content.asInteger != 0);
@@ -77,17 +83,25 @@ class VariantData {
 
   bool asBoolean() const;
 
-  CollectionData *asArray() {
+	inline VariantContent &content() {
+		return _content;
+	}
+
+	inline CollectionData *asArray() {
     return isArray() ? &_content.asCollection : 0;
   }
 
-  const CollectionData *asArray() const {
+	inline const CollectionData *asArray() const {
     return const_cast<VariantData *>(this)->asArray();
   }
 
-  CollectionData *asObject() {
+	inline CollectionData *asObject() {
     return isObject() ? &_content.asCollection : 0;
   }
+
+	inline CollectionData *asCollection() {
+		return isCollection() ? &_content.asCollection : 0;
+	}
 
   const CollectionData *asObject() const {
     return const_cast<VariantData *>(this)->asObject();
@@ -95,9 +109,11 @@ class VariantData {
 
   bool copyFrom(const VariantData &src, MemoryPool *pool) {
     switch (src.type()) {
-      case VALUE_IS_ARRAY:
+		case VALUE_IS_OWNED_ARRAY:
+		case VALUE_IS_LINKED_ARRAY:
         return toArray().copyFrom(src._content.asCollection, pool);
-      case VALUE_IS_OBJECT:
+			case VALUE_IS_OWNED_OBJECT:
+			case VALUE_IS_LINKED_OBJECT:
         return toObject().copyFrom(src._content.asCollection, pool);
       case VALUE_IS_OWNED_STRING:
         return setOwnedString(RamStringAdapter(src._content.asString), pool);
@@ -107,6 +123,43 @@ class VariantData {
       default:
         setType(src.type());
         _content = src._content;
+        return true;
+    }
+  }
+
+  bool equals(MemoryPool &pool, const VariantData &other, MemoryPool &otherPool) const {
+    // Check that variant have the same type, but ignore string ownership
+    if ((type() | VALUE_IS_OWNED) != (other.type() | VALUE_IS_OWNED))
+      return false;
+
+    switch (type()) {
+      case VALUE_IS_LINKED_STRING:
+      case VALUE_IS_OWNED_STRING:
+        return !strcmp(_content.asString, other._content.asString);
+
+      case VALUE_IS_LINKED_RAW:
+      case VALUE_IS_OWNED_RAW:
+        return _content.asRaw.size == other._content.asRaw.size &&
+               !memcmp(_content.asRaw.data, other._content.asRaw.data,
+                       _content.asRaw.size);
+
+      case VALUE_IS_BOOLEAN:
+      case VALUE_IS_INTEGER:
+        return _content.asInteger == other._content.asInteger;
+
+      case VALUE_IS_OWNED_ARRAY:
+			case VALUE_IS_LINKED_ARRAY:
+        return _content.asCollection.equalsArray(pool, other._content.asCollection, otherPool);
+
+      case VALUE_IS_OWNED_OBJECT:
+			case VALUE_IS_LINKED_OBJECT:
+				return _content.asCollection.equalsObject(pool, other._content.asCollection, otherPool);
+
+      case VALUE_IS_FLOAT:
+        return _content.asFloat == other._content.asFloat;
+
+      case VALUE_IS_NULL:
+      default:
         return true;
     }
   }
@@ -222,11 +275,6 @@ class VariantData {
     }
   }
 
-  void setUnsignedInteger(UInt value) {
-    setType(VALUE_IS_POSITIVE_INTEGER);
-    _content.asInteger = static_cast<UInt>(value);
-  }
-
   void setPositiveInteger(UInt value) {
     setType(VALUE_IS_POSITIVE_INTEGER);
     _content.asInteger = value;
@@ -236,6 +284,11 @@ class VariantData {
     setType(VALUE_IS_NEGATIVE_INTEGER);
     _content.asInteger = value;
   }
+
+	void setInteger(UInt value) {
+		setType(VALUE_IS_INTEGER);
+		_content.asInteger = value;
+	}
 
   void setLinkedString(const char *value) {
     if (value) {
@@ -270,27 +323,32 @@ class VariantData {
     return setOwnedString(value.save(pool));
   }
 
+  void setUnsignedInteger(UInt value) {
+    setType(VALUE_IS_POSITIVE_INTEGER);
+    _content.asInteger = static_cast<UInt>(value);
+  }
+
   CollectionData &toArray() {
-    setType(VALUE_IS_ARRAY);
+    setType(VALUE_IS_OWNED_ARRAY);
     _content.asCollection.clear();
     return _content.asCollection;
   }
 
   CollectionData &toObject() {
-    setType(VALUE_IS_OBJECT);
+    setType(VALUE_IS_OWNED_OBJECT);
     _content.asCollection.clear();
     return _content.asCollection;
   }
 
-  size_t memoryUsage() const {
+  size_t memoryUsage(MemoryPool &pool) const {
     switch (type()) {
       case VALUE_IS_OWNED_STRING:
         return strlen(_content.asString) + 1;
       case VALUE_IS_OWNED_RAW:
         return _content.asRaw.size;
-      case VALUE_IS_OBJECT:
-      case VALUE_IS_ARRAY:
-        return _content.asCollection.memoryUsage();
+      case VALUE_IS_OWNED_OBJECT:
+      case VALUE_IS_OWNED_ARRAY:
+        return _content.asCollection.memoryUsage(pool);
       default:
         return 0;
     }
@@ -345,14 +403,19 @@ class VariantData {
       _content.asCollection.movePointers(stringDistance, variantDistance);
   }
 
- private:
-  uint8_t type() const {
-    return _flags & VALUE_MASK;
-  }
+ //private:
+	inline uint8_t flags() const {
+		return _flags & FLAG_MASK;
+	}
 
+	inline uint8_t type() const {
+    return _flags & FLAG_MASK;
+  }
+	private:
   void setType(uint8_t t) {
-    _flags &= KEY_IS_OWNED;
-    _flags |= t;
+    //_flags &= KEY_IS_OWNED;
+		_flags &= ~FLAG_MASK;	// reset flags
+		_flags |= t;
   }
 };
 
